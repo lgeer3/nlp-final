@@ -1,5 +1,5 @@
 # nlp-final
-NLP: Self Supervised Model final project. Objective - achieving lowest complexity for LM on 20GB MIG GPU.
+NLP: Self Supervised Model final project. Objective - achieving lowest complexity for LM on 16GB MIG GPU.
 ## Setup Instructions
 
 1. Clone the repository
