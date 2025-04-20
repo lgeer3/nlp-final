@@ -9,7 +9,7 @@ NLP: Self Supervised Model final project. Objective - achieving lowest complexit
 2. Create and activate the environment:
     ```bash
     conda env create -f environment.yml
-    conda activate nlp-final
+    conda activate nlp_final
     ```
 3. Install any additional packages (if needed)
 
