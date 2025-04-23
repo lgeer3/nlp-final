@@ -12,4 +12,12 @@
 module load anaconda
 conda activate hw7 # activate the Python environment
 
-python experiments/run_experiment.py
+python experiments/run_experiment.py --model \
+    --seed \
+    --dataset \
+    --epochs \
+    --batch_size \
+    --learning_rate \
+    --gradient_accumulation \
+    --hidden_dim \
+    --hidden_layers \

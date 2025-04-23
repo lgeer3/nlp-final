@@ -1,6 +1,6 @@
 import argparse
 import torch
-from data_preprocessing.data_preprocessing import preprocess
+from data_preprocessing.data_preprocessing import preprocess_data
 from model.model import Model
 from training.train import train_model
 
@@ -11,7 +11,7 @@ def parse_args():
     parser.add_argument('--rmsnorm', action='store_true', help="Use RMSNorm instead of LayerNorm")
     parser.add_argument('--distillation', action='store_true', help="Use knowledge distillation")
     parser.add_argument('--vocab_trimming', action='store_true', help="Use vocab trimming")
-    parser.add_argument('--distillation_model', type=str, required=True, help="Pretrained model name or path (e.g., 'gpt2' or a local path)")
+    parser.add_argument('--distillation_model', type=str, help="Pretrained model name or path (e.g., 'gpt2' or a local path)")
     parser.add_argument('--activation', type=str, help="Type of activation used for model (eg. GeGLU)")
     parser.add_argument('--dataset', type=str, required=True, help="Dataset name or path (e.g., 'databricks/databricks-dolly-15k')")
 
@@ -37,12 +37,13 @@ def parse_args():
 def main():
     args = parse_args()
 
-    set_seed(args.seed)
+    # set_seed(args.seed)
+    set_seed(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    train_loader, val_loader = dataloaders(
+    train_loader, val_loader = preprocess_data(
         dataset=args.dataset,
         batch_size=args.batch_size,
         vocab_trimming=args.vocab_trimming,
@@ -58,7 +59,7 @@ def main():
     )
     model = model.to(device)
 
-    train(
+    train_model(
         model=model,
         train_loader=train_loader
         val_loader=val_loader
