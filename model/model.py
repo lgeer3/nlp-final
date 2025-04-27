@@ -17,30 +17,33 @@ class CausalSelfAttention(nn.Module):
     A vanilla multi-head masked self-attention layer with a projection at the end.
     """
 
-    def __init__(self, config):
+    def __init__(self, hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop):
         super().__init__()
-        assert config.n_embd % config.n_head == 0
+        assert hidden_dim % n_head == 0
+        self.n_head = n_head
+        self.hidden_dim = hidden_dim
+        self.head_dim = hidden_dim // n_head
+        self.block_size = block_size
+
         # key, query, value projections for all heads, but in a batch
-        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd)
+        self.c_attn = nn.Linear(self.hidden_dim, 3 * self.hidden_dim)
         # output projection
-        self.c_proj = nn.Linear(config.n_embd, config.n_embd)
+        self.c_proj = nn.Linear(self.hidden_dim, self.hidden_dim)
         # regularization
-        self.attn_dropout = nn.Dropout(config.attn_pdrop)
-        self.resid_dropout = nn.Dropout(config.resid_pdrop)
+        self.attn_dropout = nn.Dropout(attn_pdrop)
+        self.resid_dropout = nn.Dropout(resid_pdrop)
 
         # TODO: create a causal mask for attention matrix of shape [config.block_size, config.block_size] (config.block_size is the maximum sequence length)
         #   The matrix should has 1s in the lower left triangular part (including the diagonal) and 0s in the upper right.
         #   Name the matrix `causal_mask` and then expand the mask for the batch and head dimensions
-        causal_mask = torch.tril(torch.ones(config.block_size, config.block_size))
-        causal_mask = causal_mask.view(1, 1, config.block_size, config.block_size)
+        causal_mask = torch.tril(torch.ones(self.block_size, self.block_size))
+        causal_mask = causal_mask.view(1, 1, self.block_size, self.block_size)
 
         # your code ends here
         
         # register the mask as a buffer so it's not updated as a model parameter
         # but can still be used in the forward pass & saved to the state_dict
         self.register_buffer("causal_mask", causal_mask)
-        self.n_head = config.n_head
-        self.n_embd = config.n_embd
 
     def forward(self, x):
         B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd) (b, n, d)
@@ -61,16 +64,17 @@ class CausalSelfAttention(nn.Module):
 class Block(nn.Module):
     """ an unassuming Transformer block """
 
-    def __init__(self, n_embd, n_head, block_size, attn_pdrop, resid_pdrop):
+    def __init__(self, hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop, rmsnorm=False):
         super().__init__()
-        self.ln_1 = nn.LayerNorm(config.n_embd)
-        self.attn = CausalSelfAttention(config)
-        self.ln_2 = nn.LayerNorm(config.n_embd)
+        self.rmsnorm = rmsnorm
+        self.ln_1 = nn.LayerNorm(hidden_dim)
+        self.attn = CausalSelfAttention(hidden_dim=hidden_dim, n_head=n_head, block_size=block_size, attn_pdrop=attn_pdrop, resid_pdrop=resid_pdrop)
+        self.ln_2 = nn.LayerNorm(hidden_dim)
         self.mlp = nn.ModuleDict(dict(
-            c_fc    = nn.Linear(config.n_embd, 4 * config.n_embd),
-            c_proj  = nn.Linear(4 * config.n_embd, config.n_embd),
+            c_fc    = nn.Linear(hidden_dim, 4 * hidden_dim),
+            c_proj  = nn.Linear(4 * hidden_dim, hidden_dim),
             act     = NewGELU(),
-            dropout = nn.Dropout(config.resid_pdrop),
+            dropout = nn.Dropout(resid_pdrop),
         ))
         m = self.mlp
         self.mlpf = lambda x: m.dropout(m.c_proj(m.act(m.c_fc(x)))) # MLP forward
@@ -81,12 +85,9 @@ class Block(nn.Module):
         return x
 
 class Model(nn.Module):
-    def __init__(self, hidden_dim=256,
-        hidden_layers=4,
-        rmsnorm=False,
-        activation='gelu',
-        vocab_size=10000, block_size, n_layer, n_embd, n_head, 
-        embd_pdrop=0.1, attn_pdrop=0.1, resid_pdrop=0.1):
+    def __init__(self, hidden_dim=256, hidden_layers=4, rmsnorm=False, 
+                 activation='gelu', vocab_size=10000, block_size=1024, 
+                 n_head=8, attn_pdrop=0.1, resid_pdrop=0.1, embd_pdrop=0.1):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.vocab_size = vocab_size

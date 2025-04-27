@@ -56,6 +56,11 @@ def main():
         rmsnorm=args.rmsnorm,
         activation=args.activation,
         vocab_size=args.vocab_size,
+        block_size=args.block_size,
+        n_head=args.n_head,
+        attn_pdrop=0.1,
+        resid_pdrop=0.1,
+        embd_pdrop=0.1
     )
     model = model.to(device)
 
