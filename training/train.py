@@ -65,7 +65,7 @@ def train_model(
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
             
             with torch.cuda.amp.autocast(enabled=mixed_precision):
-                output = model(input_ids=input_ids, targets=labels, attention_mask=attention_mask)
+                output = model(idx=input_ids, targets=labels, mask=attention_mask)
                 loss = output['loss'] / gradient_accumulation
 
             scaler.scale(loss).backward()
@@ -88,7 +88,7 @@ def train_model(
             for batch in val_loader:
                 input_ids = batch['input_ids'].to(device)
                 labels = input_ids.clone()
-                output = model(input_ids=input_ids, targets=labels)
+                output = model(idx=input_ids, targets=labels)
                 val_loss += output['loss'].item()
 
         avg_val_loss = val_loss / len(val_loader)
