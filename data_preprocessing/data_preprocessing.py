@@ -67,9 +67,10 @@ def preprocess_data(
 ):
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
 
-    data = load_dataset(dataset) 
-    train_texts = [x for x in data["train"]["text"] if x.strip()]
-    val_texts = [x for x in data["validation"]["text"] if x.strip()]
+    # Load dataset with proper splits
+    data = load_dataset(dataset)
+    train_texts = [x for x in data["dev"]["text"] if x.strip()]
+    val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
 
     trimmed_token_set = None
     if vocab_trimming:
@@ -81,31 +82,30 @@ def preprocess_data(
         input_ids = []
         for line in texts:
             ids = tokenize(line, tokenizer, trimmed_token_set)
-            input_ids.extend(ids + [tokenizer.sep_token_id])  # Add separator between sequences
+            input_ids.extend(ids + [tokenizer.sep_token_id])
 
-        x_data, y_data = [], []
+        x_data, y_data, attention_masks = [], [], []
         for i in range(0, len(input_ids) - sequence_length):
             x = input_ids[i:i + sequence_length]
             y = input_ids[i + 1:i + 1 + sequence_length]
             if len(x) == sequence_length and len(y) == sequence_length:
                 x_data.append(x)
                 y_data.append(y)
+                attention_masks.append([1] * sequence_length)  # Create attention mask
 
-        return TensorDataset(torch.tensor(x_data), torch.tensor(y_data))
+        # Convert to tensors
+        x_tensor = torch.tensor(x_data, dtype=torch.long)
+        y_tensor = torch.tensor(y_data, dtype=torch.long)
+        mask_tensor = torch.tensor(attention_masks, dtype=torch.long)
+
+        # Create TensorDataset
+        return TensorDataset(x_tensor, mask_tensor, y_tensor)
+
     train_dataset = preprocess(train_texts)
     val_dataset = preprocess(val_texts)
 
+    # Wrap the data into DataLoader objects
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
     return train_loader, val_loader
-
-
-
-    
-
-
-
-
-
-

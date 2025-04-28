@@ -67,10 +67,10 @@ def train_model(
         total_loss = 0.0
 
         for step, batch in enumerate(tqdm(train_loader)):
-
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
-            labels = batch['labels'].to(device)
+            input_ids, attention_mask, labels = batch
+            input_ids = input_ids.to(device)
+            attention_mask = attention_mask.to(device)
+            labels = labels.to(device)
 
             with torch.cuda.amp.autocast(enabled=mixed_precision):
                 output = model(input_ids=input_ids, attention_mask=attention_mask)

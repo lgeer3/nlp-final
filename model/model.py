@@ -26,80 +26,86 @@ class CausalSelfAttention(nn.Module):
         self.block_size = block_size
 
         # key, query, value projections for all heads, but in a batch
-        self.c_attn = nn.Linear(self.hidden_dim, 3 * self.hidden_dim)
+        self.c_attn = nn.Linear(hidden_dim, 3 * hidden_dim)
         # output projection
-        self.c_proj = nn.Linear(self.hidden_dim, self.hidden_dim)
+        self.c_proj = nn.Linear(hidden_dim, hidden_dim)
         # regularization
         self.attn_dropout = nn.Dropout(attn_pdrop)
         self.resid_dropout = nn.Dropout(resid_pdrop)
 
-        # TODO: create a causal mask for attention matrix of shape [config.block_size, config.block_size] (config.block_size is the maximum sequence length)
-        #   The matrix should has 1s in the lower left triangular part (including the diagonal) and 0s in the upper right.
-        #   Name the matrix `causal_mask` and then expand the mask for the batch and head dimensions
-        causal_mask = torch.tril(torch.ones(self.block_size, self.block_size))
-        causal_mask = causal_mask.view(1, 1, self.block_size, self.block_size)
-
-        # your code ends here
+        # causal mask to ensure that attention is only applied to the left in the input sequence
+        self.register_buffer("causal_mask", torch.tril(torch.ones(block_size, block_size)))
         
-        # register the mask as a buffer so it's not updated as a model parameter
-        # but can still be used in the forward pass & saved to the state_dict
-        self.register_buffer("causal_mask", causal_mask)
-
     def forward(self, x):
-        B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd) (b, n, d)
+        B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
 
-        # TODO: implement the forward pass of the casual self-attention layer.
-        #d = C: dimensionality
-        query_projected = self.c_attn(x)
-        Q, K, V = query_projected.chunk(3, -1)
+        # calculate query, key, values for all heads in batch and move head forward to be the batch dim
+        q, k, v  = self.c_attn(x).split(self.hidden_dim, dim=2)
+        k = k.view(B, T, self.n_head, self.head_dim).transpose(1, 2) # (B, nh, T, hs)
+        q = q.view(B, T, self.n_head, self.head_dim).transpose(1, 2) # (B, nh, T, hs)
+        v = v.view(B, T, self.n_head, self.head_dim).transpose(1, 2) # (B, nh, T, hs)
 
-        attention = torch.matmul(Q, K.transpose(-2, -1)) # similarity matrix bxnxn
-        attention = attention/math.sqrt(C)
-        attention = torch.nn.functional.softmax(attention, dim=1)
-        attention = torch.matmul(attention, V) # bxnxh
-        y = attention
+        # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
+        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        att = att.masked_fill(self.causal_mask[:T, :T] == 0, float('-inf'))
+        att = F.softmax(att, dim=-1)
+        att = self.attn_dropout(att)
+        y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
 
+        # output projection
+        y = self.resid_dropout(self.c_proj(y))
         return y
 
 class Block(nn.Module):
-    """ an unassuming Transformer block """
+    """ A standard transformer block with layer norm and residual connections """
 
-    def __init__(self, hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop, rmsnorm=False):
+    def __init__(self, hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop):
         super().__init__()
-        self.rmsnorm = rmsnorm
         self.ln_1 = nn.LayerNorm(hidden_dim)
-        self.attn = CausalSelfAttention(hidden_dim=hidden_dim, n_head=n_head, block_size=block_size, attn_pdrop=attn_pdrop, resid_pdrop=resid_pdrop)
+        self.attn = CausalSelfAttention(hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop)
         self.ln_2 = nn.LayerNorm(hidden_dim)
-        self.mlp = nn.ModuleDict(dict(
-            c_fc    = nn.Linear(hidden_dim, 4 * hidden_dim),
-            c_proj  = nn.Linear(4 * hidden_dim, hidden_dim),
-            act     = NewGELU(),
-            dropout = nn.Dropout(resid_pdrop),
-        ))
-        m = self.mlp
-        self.mlpf = lambda x: m.dropout(m.c_proj(m.act(m.c_fc(x)))) # MLP forward
+        self.mlp = nn.Sequential(
+            nn.Linear(hidden_dim, 4 * hidden_dim),
+            NewGELU(),
+            nn.Linear(4 * hidden_dim, hidden_dim),
+            nn.Dropout(resid_pdrop),
+        )
 
     def forward(self, x):
+        # Attention part
         x = x + self.attn(self.ln_1(x))
-        x = x + self.mlpf(self.ln_2(x))
+        # MLP part
+        x = x + self.mlp(self.ln_2(x))
         return x
 
 class Model(nn.Module):
-    def __init__(self, hidden_dim=256, hidden_layers=4, rmsnorm=False, 
-                 activation='gelu', vocab_size=10000, block_size=1024, 
-                 n_head=8, attn_pdrop=0.1, resid_pdrop=0.1, embd_pdrop=0.1):
+    """ The full GPT language model with a context size of block_size """
+
+    def __init__(self, hidden_dim=256, hidden_layers=6, vocab_size=50257, 
+                 block_size=1024, n_head=8, attn_pdrop=0.1, resid_pdrop=0.1, 
+                 embd_pdrop=0.1):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.vocab_size = vocab_size
+        self.block_size = block_size
 
-        self.transformer = nn.ModuleDict(dict(
-            wte = nn.Embedding(self.vocab_size, self.hidden_dim),
-            wpe = nn.Embedding(self.block_size, self.hidden_dim),
-            h = nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
-            ln_f = nn.LayerNorm(self.hidden_dim),
-        ))
-        self.lm_head = nn.Linear(self.hidden_dim, self.vocab_size, bias=False)
+        # input embedding stem
+        self.tok_emb = nn.Embedding(vocab_size, hidden_dim)
+        self.pos_emb = nn.Parameter(torch.zeros(1, block_size, hidden_dim))
+        self.drop = nn.Dropout(embd_pdrop)
 
+        # transformer
+        self.blocks = nn.Sequential(*[
+            Block(hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop)
+            for _ in range(hidden_layers)
+        ])
+        
+        # decoder head
+        self.ln_f = nn.LayerNorm(hidden_dim)
+        self.head = nn.Linear(hidden_dim, vocab_size, bias=False)
+
+        # init all weights
         self.apply(self._init_weights)
 
     def _init_weights(self, module):
@@ -113,34 +119,64 @@ class Model(nn.Module):
             torch.nn.init.zeros_(module.bias)
             torch.nn.init.ones_(module.weight)
 
-     def forward(self, idx, targets=None, mask=None):
+    def forward(self, idx, targets=None, mask=None):
         device = idx.device
         b, t = idx.size()
-        assert t <= self.block_size, f"Cannot forward sequence of length {t}, block size is only {self.block_size}"
-        pos = torch.arange(0, t, dtype=torch.long, device=device).unsqueeze(0) # shape (1, t)
+        
+        # forward the GPT model
+        token_embeddings = self.tok_emb(idx) # each index maps to a (learnable) vector
+        position_embeddings = self.pos_emb[:, :t, :] # each position maps to a (learnable) vector
+        x = self.drop(token_embeddings + position_embeddings)
+        x = self.blocks(x)
+        x = self.ln_f(x)
+        logits = self.head(x)
 
-         # forward pass
-        tok_emb = self.transformer.wte(idx) # token embeddings
-        pos_emb = self.transformer.wpe(pos) # position embeddings
-        x = self.transformer.drop(tok_emb + pos_emb)
-        for block in self.transformer.h:
-            x = block(x)
-        x = self.transformer.ln_f(x)
-        logits = self.lm_head(x)
-
-        # calculate loss if targets are provided
+        # if we are given some desired targets also calculate the loss
         loss = None
         if targets is not None:
-            logits = logits[:, :-1, :].contiguous().view(-1, logits.size(-1))
-            targets = targets[:, 1:].contiguous().view(-1)
-            loss = F.cross_entropy(logits, targets, reduction='none')
+            # shift logits and targets for next-token prediction
+            logits = logits[:, :-1, :].contiguous()
+            targets = targets[:, 1:].contiguous()
+            
+            # flatten the tokens
+            loss = F.cross_entropy(
+                logits.view(-1, logits.size(-1)), 
+                targets.view(-1), 
+                reduction='none'
+            )
+            
+            # apply mask if provided
             if mask is not None:
-                loss = loss.view(b, -1)
                 mask = mask[:, 1:].contiguous()
-                assert 0 not in mask.sum(dim=1), "each sequence must have at least one token unmasked"
-                loss = loss * mask
-                loss = loss.sum() / mask.sum()
+                loss = loss.view(b, -1)
+                loss = (loss * mask).sum() / mask.sum()
             else:
                 loss = loss.mean()
 
         return logits, loss
+
+    @torch.no_grad()
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+        """
+        Take a conditioning sequence of indices idx (LongTensor of shape (b, t)) and complete
+        the sequence max_new_tokens times, feeding the predictions back into the model each time.
+        """
+        for _ in range(max_new_tokens):
+            # if the sequence context is growing too long we must crop it at block_size
+            idx_cond = idx if idx.size(1) <= self.block_size else idx[:, -self.block_size:]
+            # forward the model to get the logits for the index in the sequence
+            logits, _ = self(idx_cond)
+            # pluck the logits at the final step and scale by temperature
+            logits = logits[:, -1, :] / temperature
+            # optionally crop probabilities to only the top k options
+            if top_k is not None:
+                v, _ = torch.topk(logits, top_k)
+                logits[logits < v[:, [-1]]] = -float('Inf')
+            # apply softmax to convert to probabilities
+            probs = F.softmax(logits, dim=-1)
+            # sample from the distribution
+            idx_next = torch.multinomial(probs, num_samples=1)
+            # append sampled index to the running sequence
+            idx = torch.cat((idx, idx_next), dim=1)
+
+        return idx
