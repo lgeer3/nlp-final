@@ -18,6 +18,7 @@ def parse_args():
     # Training hyperparameters
     parser.add_argument('--epochs', type=int, default=3, help="Number of training epochs")
     parser.add_argument('--batch_size', type=int, default=32, help="Batch size for training")
+    parser.add_argument('--block_size', type=int, default=32, help="Block size for training")
     parser.add_argument('--learning_rate', type=float, default=1e-5, help="Learning rate for the optimizer")
     parser.add_argument('--gradient_accumulation', type=int, default=8, help="how many steps you accumulate to form a 'large batch'.")
 
