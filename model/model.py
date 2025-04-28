@@ -153,7 +153,7 @@ class Model(nn.Module):
             else:
                 loss = loss.mean()
 
-        return logits, loss
+        return {'logits': logits, 'loss': loss}
 
     @torch.no_grad()
     def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
