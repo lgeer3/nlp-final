@@ -1,0 +1,21 @@
+✅ Python started
+Using device: cuda
+PREPROCESSING DATA
+loading tokenizer
+loaded
+about to load corpus
+Downloading readme:   0%|          | 0.00/410 [00:00<?, ?B/s]Downloading readme: 100%|██████████| 410/410 [00:00<00:00, 5.16MB/s]
+Downloading data:   0%|          | 0.00/5.20M [00:00<?, ?B/s]Downloading data: 100%|██████████| 5.20M/5.20M [00:00<00:00, 9.11MB/s]Downloading data: 100%|██████████| 5.20M/5.20M [00:00<00:00, 9.02MB/s]
+Downloading data:   0%|          | 0.00/5.48M [00:00<?, ?B/s]Downloading data: 100%|██████████| 5.48M/5.48M [00:00<00:00, 15.5MB/s]Downloading data: 100%|██████████| 5.48M/5.48M [00:00<00:00, 15.3MB/s]
+Generating dev split:   0%|          | 0/2000 [00:00<?, ? examples/s]Generating dev split: 100%|██████████| 2000/2000 [00:00<00:00, 6044.76 examples/s]Generating dev split: 100%|██████████| 2000/2000 [00:00<00:00, 5956.46 examples/s]
+Generating dev_test split:   0%|          | 0/2000 [00:00<?, ? examples/s]Generating dev_test split: 100%|██████████| 2000/2000 [00:00<00:00, 66547.21 examples/s]
+Traceback (most recent call last):
+  File "/scratch4/cs601-dkhasha1/cs601-lgeer3/nlp-final/run_experiment.py", line 69, in <module>
+    main()
+  File "/scratch4/cs601-dkhasha1/cs601-lgeer3/nlp-final/run_experiment.py", line 36, in main
+    train_loader, val_loader = preprocess_data(
+  File "/scratch4/cs601-dkhasha1/cs601-lgeer3/nlp-final/data_preprocessing/data_preprocessing.py", line 79, in preprocess_data
+    train_texts = [x for x in data["train"]["text"] if x.strip()]
+  File "/home/cs601-lgeer3/.conda/envs/hw7/lib/python3.9/site-packages/datasets/dataset_dict.py", line 74, in __getitem__
+    return super().__getitem__(k)
+KeyError: 'train'
