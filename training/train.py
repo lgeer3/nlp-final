@@ -47,16 +47,16 @@ def train_model(
     scaler = torch.cuda.amp.GradScaler(enabled=mixed_precision)
 
     best_val_loss = float('inf')
-    total_steps = len(train_loader)
 
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0
-        start_time = time.time()
 
         optimizer.zero_grad()
 
-        for step, batch in enumerate(tqdm(train_loader)):
+        progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", dynamic_ncols=True)
+
+        for step, batch in enumerate(progress_bar):
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
                 input_ids = batch[0].to(device)
@@ -81,11 +81,8 @@ def train_model(
                 lr_scheduler.step()
                 total_loss += loss.item()
 
-            if (step + 1) % 10 == 0 or (step + 1) == total_steps:
-                elapsed = time.time() - start_time
-                print(f"Epoch [{epoch+1}/{epochs}] Step [{step+1}/{total_steps}] "
-                      f"Loss: {total_loss / (step+1):.4f} "
-                      f"Elapsed: {elapsed:.2f}s")
+            avg_loss = total_loss / (step + 1)
+            progress_bar.set_postfix(loss=f"{avg_loss:.4f}")
 
 
         if total_loss > 0:
