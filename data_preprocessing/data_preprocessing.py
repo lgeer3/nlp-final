@@ -69,7 +69,9 @@ def preprocess_data(
     model: str="bert-base-cased",
     sequence_length: int=64
 ):
+    print("loading tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    print("loaded")
 
     # Load dataset with proper splits
     print("about to load corpus")
