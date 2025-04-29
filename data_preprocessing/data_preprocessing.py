@@ -98,11 +98,6 @@ def preprocess_data(
             input_ids.extend(ids + [tokenizer.sep_token_id])
         
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
-        MAX_TOKENS = 250_000
-
-        if len(input_ids) > MAX_TOKENS:
-            print(f"⚠️ Truncating input_ids from {len(input_ids)} to {MAX_TOKENS}", flush=True)
-            input_ids = input_ids[:MAX_TOKENS]
 
         x_data, y_data = [], []
         for i in range(0, len(input_ids) - sequence_length):
