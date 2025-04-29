@@ -52,6 +52,8 @@ def train_model(
         model.train()
         total_loss = 0.0
 
+        optimizer.zero_grad()
+
         for step, batch in enumerate(tqdm(train_loader)):
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
@@ -75,8 +77,12 @@ def train_model(
                 scaler.update()
                 optimizer.zero_grad()
                 lr_scheduler.step()
+                total_loss += loss.item()
 
-            total_loss += loss.item() * gradient_accumulation
+        if total_loss > 0:
+            optimizer.step()
+            optimizer.zero_grad()
+
 
         avg_train_loss = total_loss / len(train_loader)
         print(f"Epoch {epoch + 1}, Train Loss: {avg_train_loss:.4f}")
