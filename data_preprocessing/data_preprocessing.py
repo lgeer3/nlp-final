@@ -11,6 +11,7 @@ def load_corpus(dataset_name="wikitext", subset="wikitext-103-raw-v1", split="tr
     # retrieves the dataset and separates each example by whitescape
     data = load_dataset(dataset_name, subset, split=split)
     corpus = [x for x in data["text"] if x.strip()]
+    
 
     return corpus
 
@@ -69,8 +70,13 @@ def preprocess_data(
 
     # Load dataset with proper splits
     data = load_dataset(dataset)
-    train_texts = [x for x in data["dev"]["text"] if x.strip()]
-    val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
+    train_texts = [x for x in data["train"]["text"] if x.strip()]
+    val_texts = [x for x in data["validation"]["text"] if x.strip()]
+
+    sample_size = 5000  # or smaller for debugging
+
+    train_texts = train_texts[:sample_size]
+    val_texts = val_texts[:sample_size]
 
     trimmed_token_set = None
     if vocab_trimming:
