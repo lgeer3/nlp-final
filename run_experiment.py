@@ -8,7 +8,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, required=True, help="Dataset name or path (e.g., 'databricks/databricks-dolly-15k')")
     parser.add_argument('--batch_size', type=int, default=32, help="Batch size for training")
-    parser.add_argument('--block_size', type=int, default=32, help="Block size for training")
+    parser.add_argument('--block_size', type=int, default=1024, help="Block size for training")
     parser.add_argument('--learning_rate', type=float, default=1e-5, help="Learning rate for the optimizer")
     parser.add_argument('--gradient_accumulation', type=int, default=8, help="how many steps you accumulate to form a 'large batch'.")
     # Model Architecture
@@ -16,7 +16,6 @@ def parse_args():
     parser.add_argument('--vocab_size', type=int, default=10000, help="Vocab Size after trimming, only applies if vocab trimming is turned on")
     parser.add_argument('--hidden_dim', type=int, default=256, help="Hidden dimension size for model layers")
     parser.add_argument('--hidden_layers', type=int, default=4, help="Number of hidden layers in the model")
-    parser.add_argument("--block_size", type=int, default=1024)
     parser.add_argument('--epochs', type=int, default=3, help="Number of training epochs")
     parser.add_argument('--learning_rate', type=float, default=1e-5, help="Learning rate for the optimizer")
     parser.add_argument('--save_model', action='store_true', help="Save the best model during training")
