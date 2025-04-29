@@ -59,6 +59,7 @@ def main():
         learning_rate=args.learning_rate,
         save_model=args.save_model,
         save_path=args.save_path,
+        gradient_accumulation=args.gradient_accumulation
     )
 
 
