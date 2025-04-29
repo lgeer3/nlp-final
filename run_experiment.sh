@@ -12,4 +12,4 @@
 module load anaconda
 conda activate hw7 # activate the Python environment
 
-python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 32 --vocab_trimming --vocab_size 10000 --hidden_dim 256 --hidden_layers 4 --block_size 1024 --epochs 3 --learning_rate 1e-5 --save_model --save_path ./checkpoints/
+python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 32 --vocab_trimming --vocab_size 10000 --hidden_dim 256 --hidden_layers 4 --block_size 1024 --epochs 2 --learning_rate 1e-5 --save_model --save_path ./checkpoints/
