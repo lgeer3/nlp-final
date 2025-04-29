@@ -76,8 +76,8 @@ def preprocess_data(
     # Load dataset with proper splits
     print("about to load corpus")
     data = load_dataset(dataset)
-    train_texts = [x for x in data["train"]["text"] if x.strip()]
-    val_texts = [x for x in data["validation"]["text"] if x.strip()]
+    train_texts = [x for x in data["dev"]["text"] if x.strip()]
+    val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
     print("loaded corpus")
 
     sample_size = 5000  # or smaller for debugging
