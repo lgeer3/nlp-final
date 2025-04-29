@@ -89,23 +89,25 @@ def preprocess_data(
         for line in texts:
             ids = tokenize(line, tokenizer, trimmed_token_set)
             input_ids.extend(ids + [tokenizer.sep_token_id])
+        
+        print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
-        x_data, y_data, attention_masks = [], [], []
+        x_data, y_data = [], []
         for i in range(0, len(input_ids) - sequence_length):
             x = input_ids[i:i + sequence_length]
             y = input_ids[i + 1:i + 1 + sequence_length]
             if len(x) == sequence_length and len(y) == sequence_length:
                 x_data.append(x)
                 y_data.append(y)
-                attention_masks.append([1] * sequence_length)  # Create attention mask
+        
+        print(f"Total x/y pairs: {len(x_data)}", flush=True)
 
         # Convert to tensors
         x_tensor = torch.tensor(x_data, dtype=torch.long)
         y_tensor = torch.tensor(y_data, dtype=torch.long)
-        mask_tensor = torch.tensor(attention_masks, dtype=torch.long)
 
         # Create TensorDataset
-        return TensorDataset(x_tensor, mask_tensor, y_tensor)
+        return TensorDataset(x_tensor, y_tensor)
 
     train_dataset = preprocess(train_texts)
     val_dataset = preprocess(val_texts)
