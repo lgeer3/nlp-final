@@ -23,6 +23,7 @@ def parse_args():
     return parser.parse_args()
 
 def main():
+    print("✅ Python started", flush=True)
     args = parse_args()
 
     # set_seed(args.seed)
@@ -61,6 +62,7 @@ def main():
         save_path=args.save_path,
         gradient_accumulation=args.gradient_accumulation
     )
+
 
 
 
