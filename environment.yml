@@ -1,25 +1,22 @@
-name: nlp_final
+name: nlp-final
 channels:
   - defaults
-  - https://repo.anaconda.com/pkgs/main
-  - https://repo.anaconda.com/pkgs/r
+  - conda-forge
 dependencies:
   - python=3.11
-  - pip=25.0
-  - numpy=2.2.4
-  - pandas=2.2.3
+  - pip
+  - numpy
+  - pandas
+  - tqdm
+  - matplotlib
+  - pytorch>=2.0
   - pip:
-      - datasets==3.5.0
-      - evaluate==0.4.3
-      - huggingface-hub==0.30.2
-      - nltk==3.9.1
-      - sentencepiece==0.2.0
-      - spacy==3.8.5
-      - spacy-legacy==3.0.12
-      - spacy-loggers==1.0.5
-      - thinc==8.3.6
-      - tokenizers  # [optionally add version if needed]
-      - transformers  # [optionally add version if needed]
-      - safetensors==0.5.3
-      - torch  # if you plan to use models with PyTorch backend
-      - scikit-learn==1.6.1  # for model evaluation
+      - torch 
+      - datasets>=2.0
+      - transformers>=4.35
+      - evaluate
+      - huggingface-hub
+      - sentencepiece
+      - tokenizers
+      - safetensors
+      - scikit-learn
