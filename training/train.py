@@ -67,7 +67,7 @@ def train_model(
         num_warmup_steps=50,
         num_training_steps=len(train_loader) * epochs
     )
-    scaler = torch.cuda.amp.GradScaler(enabled=mixed_precision)
+    scaler = torch.amp.GradScaler(enabled=mixed_precision, device_type="cuda")
 
     best_val_loss = float('inf')
 
@@ -93,7 +93,7 @@ def train_model(
             
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
             
-            with torch.cuda.amp.autocast(enabled=mixed_precision):
+            with torch.cuda.amp.autocast(enabled=mixed_precision, device_type="cuda"):
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
                 loss = output['loss'] / gradient_accumulation
 
