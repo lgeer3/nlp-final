@@ -4,6 +4,28 @@ from tqdm import tqdm
 from transformers import get_scheduler
 import evaluate
 import sys
+import matplotlib.pyplot as plt
+import math
+
+def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs_epochs.png"):
+    epochs = range(1, len(train_losses) + 1)
+    train_perplexities = [math.exp(loss) for loss in train_losses]
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, train_perplexities, label="Train Perplexity", marker='o')
+
+    val_perplexities = [math.exp(loss) for loss in val_losses]
+    plt.plot(epochs, val_perplexities, label="Validation Perplexity", marker='o')
+
+    plt.title("Perplexity vs. Epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Perplexity")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(save_path)
+    print(f"📊 Saved perplexity plot to {save_path}")
+
 
 def evaluate_model(model, dataloader, device):
     """
@@ -49,14 +71,17 @@ def train_model(
 
     best_val_loss = float('inf')
 
+    train_losses = []
+    val_losses = []
+
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0
 
         optimizer.zero_grad()
 
-
-        for step, batch in enumerate(train_loader):
+        progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", dynamic_ncols=True, file=sys.stdout)
+        for step, batch in enumerate(progress_bar):
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
                 input_ids = batch[0].to(device)
@@ -81,9 +106,8 @@ def train_model(
                 lr_scheduler.step()
                 total_loss += loss.item()
 
-            if (step + 1) % 10 == 0 or (step + 1) == len(train_loader):
-                avg_loss = total_loss / (step + 1)
-                print(f"Epoch [{epoch+1}/{epochs}] Step [{step+1}/{len(train_loader)}] Loss: {avg_loss:.4f}", flush=True)
+            avg_loss_so_far = total_loss / (step + 1)
+            progress_bar.set_postfix(loss=f"{avg_loss_so_far:.4f}")
 
 
         if total_loss > 0:
@@ -92,6 +116,7 @@ def train_model(
 
 
         avg_train_loss = total_loss / len(train_loader)
+        train_losses.append(avg_train_loss)
         print(f"Epoch {epoch + 1}, Train Loss: {avg_train_loss:.4f}")
 
         # Validation
@@ -108,9 +133,12 @@ def train_model(
                 val_loss += output['loss'].item()
 
         avg_val_loss = val_loss / len(val_loader)
+        val_losses.append(avg_val_loss)
         print(f"Validation Loss: {avg_val_loss:.4f}")
 
         if save_model and avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             torch.save(model.state_dict(), f"{save_path}/best_model_epoch{epoch+1}.pt")
             print(f"Saved best model (loss={avg_val_loss:.4f})")
+
+    save_perplexity_plot(train_losses, val_losses)
