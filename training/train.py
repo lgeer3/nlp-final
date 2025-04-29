@@ -55,9 +55,8 @@ def train_model(
 
         optimizer.zero_grad()
 
-        progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", dynamic_ncols=True, file=sys.stdout)
 
-        for step, batch in enumerate(progress_bar):
+        for step, batch in enumerate(train_loader):
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
                 input_ids = batch[0].to(device)
@@ -82,8 +81,9 @@ def train_model(
                 lr_scheduler.step()
                 total_loss += loss.item()
 
-            avg_loss = total_loss / (step + 1)
-            progress_bar.set_postfix(loss=f"{avg_loss:.4f}")
+            if (step + 1) % 10 == 0 or (step + 1) == len(train_loader):
+                avg_loss = total_loss / (step + 1)
+                print(f"Epoch [{epoch+1}/{epochs}] Step [{step+1}/{len(train_loader)}] Loss: {avg_loss:.4f}", flush=True)
 
 
         if total_loss > 0:
