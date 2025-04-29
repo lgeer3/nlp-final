@@ -86,7 +86,10 @@ def train_model(
         val_loss = 0.0
         with torch.no_grad():
             for batch in val_loader:
-                input_ids = batch['input_ids'].to(device)
+                if isinstance(batch, (list, tuple)):
+                    input_ids = batch[0].to(device)
+                else:  # if batch is a dict
+                    input_ids = batch['input_ids'].to(device)
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels)
                 val_loss += output['loss'].item()
