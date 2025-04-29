@@ -9,7 +9,9 @@ import torch
 
 def load_corpus(dataset_name="wikitext", subset="wikitext-103-raw-v1", split="train", sample_size=None) -> List[str]:
     # retrieves the dataset and separates each example by whitescape
+    print("about to load corpus")
     data = load_dataset(dataset_name, subset, split=split)
+    print("loaded corpus")
     corpus = [x for x in data["text"] if x.strip()]
     
 
