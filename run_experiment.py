@@ -17,7 +17,6 @@ def parse_args():
     parser.add_argument('--hidden_dim', type=int, default=256, help="Hidden dimension size for model layers")
     parser.add_argument('--hidden_layers', type=int, default=4, help="Number of hidden layers in the model")
     parser.add_argument('--epochs', type=int, default=3, help="Number of training epochs")
-    parser.add_argument('--learning_rate', type=float, default=1e-5, help="Learning rate for the optimizer")
     parser.add_argument('--save_model', action='store_true', help="Save the best model during training")
     parser.add_argument('--save_path', type=str, default='./checkpoints/', help="Where to save model checkpoints")
     return parser.parse_args()
