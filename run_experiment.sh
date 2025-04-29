@@ -10,6 +10,6 @@
 #SBATCH --mem=16G
 
 module load anaconda
-conda activate hw7 # activate the Python environment
+conda activate nlp_final # activate the Python environment
 
 python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 64 --vocab_trimming --vocab_size 10000 --hidden_dim 256 --hidden_layers 5 --block_size 64 --epochs 2 --learning_rate 1e-5 --save_model --save_path ./checkpoints/
