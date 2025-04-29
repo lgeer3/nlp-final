@@ -3,6 +3,7 @@ import time
 from tqdm import tqdm
 from transformers import get_scheduler
 import evaluate
+import sys
 
 def evaluate_model(model, dataloader, device):
     """
@@ -54,7 +55,7 @@ def train_model(
 
         optimizer.zero_grad()
 
-        progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", dynamic_ncols=True)
+        progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", dynamic_ncols=True, file=sys.stdout)
 
         for step, batch in enumerate(progress_bar):
             # If batch is a tuple (input_ids, attention_mask)
