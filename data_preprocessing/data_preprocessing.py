@@ -7,6 +7,7 @@ from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
 import torch
 
+'''
 def load_corpus(dataset_name="wikitext", subset="wikitext-103-raw-v1", split="train", sample_size=None) -> List[str]:
     # retrieves the dataset and separates each example by whitescape
     print("about to load corpus")
@@ -16,7 +17,7 @@ def load_corpus(dataset_name="wikitext", subset="wikitext-103-raw-v1", split="tr
     
 
     return corpus
-
+'''
 def trim_vocab(vocab: dict, vocab_size: int) -> set:
     # sorts the vocab by the positional score system and trims it to the requested size
     top_tokens = sorted(vocab.items(), key=lambda x: x[1], reverse=True)[:vocab_size]
@@ -71,9 +72,11 @@ def preprocess_data(
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
 
     # Load dataset with proper splits
+    print("about to load corpus")
     data = load_dataset(dataset)
     train_texts = [x for x in data["train"]["text"] if x.strip()]
     val_texts = [x for x in data["validation"]["text"] if x.strip()]
+    print("loaded corpus")
 
     sample_size = 5000  # or smaller for debugging
 
