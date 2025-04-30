@@ -44,7 +44,7 @@ def main():
 
     print("PREPROCESSING DATA")
 
-    train_loader, val_loader = preprocess_data(
+    train_loader, val_loader, tokenizer = preprocess_data(
         dataset=args.dataset,
         batch_size=args.batch_size,
         vocab_trimming=args.vocab_trimming,
@@ -70,7 +70,8 @@ def main():
         learning_rate=args.learning_rate,
         save_model=args.save_model,
         save_path=args.save_path,
-        gradient_accumulation=args.gradient_accumulation
+        gradient_accumulation=args.gradient_accumulation,
+        tokenizer=tokenizer
     )
 
 

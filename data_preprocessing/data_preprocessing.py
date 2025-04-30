@@ -132,4 +132,4 @@ def preprocess_data(
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
-    return train_loader, val_loader
+    return train_loader, val_loader, tokenizer

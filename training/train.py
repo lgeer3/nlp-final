@@ -61,6 +61,7 @@ def train_model(
         train_loader,
         val_loader,
         device,
+        tokenizer,
         epochs=3,
         learning_rate=1e-5,
         gradient_accumulation=8,
@@ -148,5 +149,14 @@ def train_model(
             best_val_loss = avg_val_loss
             torch.save(model.state_dict(), f"{save_path}/best_model_epoch{epoch+1}.pt")
             print(f"Saved best model (loss={avg_val_loss:.4f})")
+
+        start_ids = torch.tensor([[tokenizer.bos_token_id]], dtype=torch.long).to(device)
+
+        # Generate output
+        generated_ids = model.generate(start_ids, max_new_tokens=50)
+
+        # Decode and print
+        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        print(f"\n🧠 Sample output after epoch {epoch+1}:\n{generated_text}\n")
 
     save_perplexity_plot(train_losses, val_losses)
