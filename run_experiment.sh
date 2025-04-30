@@ -12,11 +12,10 @@ echo "✅ SLURM job started: $(date)"
 hostname                           
 nvidia-smi
 module load anaconda
-. /home/cs601-lgeer3/scr4-cs601-dkhasha1/cs601-lgeer3/nlp-final/env/bin/activate
 
 
 echo "✅ Python about to run: $(date)"
-python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 64 --vocab_trimming --vocab_size 10000 --hidden_dim 256 --hidden_layers 5 --block_size 64 --epochs 2 --learning_rate 1e-5 --save_model --save_path ./checkpoints/
+/home/cs601-lgeer3/scr4-cs601-dkhasha1/cs601-lgeer3/nlp-final/env/bin/python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 64 --vocab_trimming --vocab_size 10000 --hidden_dim 256 --hidden_layers 5 --block_size 64 --epochs 2 --learning_rate 1e-5 --save_model --save_path ./checkpoints/
 echo "✅ Python finished: $(date)";
 
 
