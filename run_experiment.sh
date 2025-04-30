@@ -12,7 +12,7 @@ echo "✅ SLURM job started: $(date)"
 hostname                           
 nvidia-smi
 module load anaconda
-. /home/cs601-lgeer3/nlp_envs/nlp_final_local/bin/activate
+. /home/cs601-lgeer3/scr4-cs601-dkhasha1/cs601-lgeer3/nlp-final/env/bin/activate
 
 
 echo "✅ Python about to run: $(date)"
