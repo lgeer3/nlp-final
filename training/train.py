@@ -1,18 +1,10 @@
-print("✅ importing torch", flush=True)
 import torch
-print("✅ importing tqdm", flush=True)
 from tqdm import tqdm
-print("✅ importing scheduler", flush=True)
 from transformers import get_scheduler
-print("✅ importing evaluate", flush=True)
 import evaluate
-print("✅ importing sys", flush=True)
 import sys
-print("✅ importing plt", flush=True)
 import matplotlib.pyplot as plt
-print("✅ importing math", flush=True)
 import math
-print("✅ importing gradscaler", flush=True)
 from torch.cuda.amp import GradScaler, autocast
 
 def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs_epochs.png"):
