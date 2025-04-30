@@ -13,7 +13,7 @@ hostname
 nvidia-smi
 module load anaconda
 source ~/nlp_envs/nlp_final_local/bin/activate
-
+which python
 echo "✅ Python about to run: $(date)"
 python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 64 --vocab_trimming --vocab_size 10000 --hidden_dim 256 --hidden_layers 5 --block_size 64 --epochs 2 --learning_rate 1e-5 --save_model --save_path ./checkpoints/
 echo "✅ Python finished: $(date)";

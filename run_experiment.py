@@ -1,3 +1,10 @@
+import sys
+import torch
+
+print("✅ Python path:", sys.executable, flush=True)
+print("✅ Torch version:", torch.__version__, flush=True)
+print("✅ CUDA available:", torch.cuda.is_available(), flush=True)
+
 print("✅ importing argparse", flush=True)
 import argparse
 print("✅ importing torch", flush=True)
@@ -5,6 +12,8 @@ import torch
 from data_preprocessing.data_preprocessing import preprocess_data
 from model.model import Model
 from training.train import train_model
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
