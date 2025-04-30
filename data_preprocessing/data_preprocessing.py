@@ -1,10 +1,16 @@
+print("✅ importing tokenizer", flush=True)
 from transformers import AutoTokenizer
+print("✅ importing datasets", flush=True)
 from datasets import load_dataset
+print("✅ importing defaultdict", flush=True)
 from collections import defaultdict
+print("✅ importing list", flush=True)
 from typing import List, Optional
-import json
+print("✅ importing tensor", flush=True)
 from torch.utils.data import TensorDataset
+print("✅ importing dataloader", flush=True)
 from torch.utils.data import DataLoader
+print("✅ importing torch", flush=True)
 import torch
 
 '''
