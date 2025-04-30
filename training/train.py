@@ -32,7 +32,7 @@ def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs
     plt.legend()
     plt.tight_layout()
     plt.savefig(save_path)
-    print(f"📊 Saved perplexity plot to {save_path}")
+    print(f" Saved perplexity plot to {save_path}")
 
 
 def evaluate_model(model, dataloader, device):
@@ -159,6 +159,6 @@ def train_model(
 
         # Decode and print
         generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-        print(f"\n🧠 Sample output after epoch {epoch+1}:\n{generated_text}\n")
+        print(f"\n Sample output after epoch {epoch+1}:\n{generated_text}\n")
 
     save_perplexity_plot(train_losses, val_losses)

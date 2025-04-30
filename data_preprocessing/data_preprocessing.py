@@ -92,7 +92,7 @@ def preprocess_data(
     train_texts = train_texts[:sample_size]
     val_texts = val_texts[:sample_size]
     '''
-    
+
     trimmed_token_set = None
     if vocab_trimming:
         vocab = tokenizer.get_vocab()
@@ -108,7 +108,7 @@ def preprocess_data(
         MAX_TOKENS = 200_000
 
         if len(input_ids) > MAX_TOKENS:
-            print(f"⚠️ Truncating input_ids from {len(input_ids)} to {MAX_TOKENS}", flush=True)
+            print(f"Truncating input_ids from {len(input_ids)} to {MAX_TOKENS}", flush=True)
             input_ids = input_ids[:MAX_TOKENS]
 
         x_data, y_data = [], []
