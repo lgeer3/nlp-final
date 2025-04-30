@@ -165,7 +165,7 @@ class Model(nn.Module):
             # if the sequence context is growing too long we must crop it at block_size
             idx_cond = idx if idx.size(1) <= self.block_size else idx[:, -self.block_size:]
             # forward the model to get the logits for the index in the sequence
-            logits, _ = self(idx_cond)
+            logits = self(idx_cond)["logits"]
             # pluck the logits at the final step and scale by temperature
             logits = logits[:, -1, :] / temperature
             # optionally crop probabilities to only the top k options
