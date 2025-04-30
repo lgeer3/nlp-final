@@ -150,7 +150,9 @@ def train_model(
             torch.save(model.state_dict(), f"{save_path}/best_model_epoch{epoch+1}.pt")
             print(f"Saved best model (loss={avg_val_loss:.4f})")
 
-        start_ids = torch.tensor([[tokenizer.bos_token_id]], dtype=torch.long).to(device)
+        start_token_id = tokenizer.bos_token_id or tokenizer.cls_token_id or tokenizer.sep_token_id or 0
+        start_ids = torch.tensor([[start_token_id]], dtype=torch.long).to(device)
+
 
         # Generate output
         generated_ids = model.generate(start_ids, max_new_tokens=50)
