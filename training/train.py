@@ -155,7 +155,7 @@ def train_model(
 
 
         # Generate output
-        generated_ids = model.generate(start_ids, max_new_tokens=50)
+        generated_ids = model.generate(start_ids, max_new_tokens=50, temperature=0.7)
 
         # Decode and print
         generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)

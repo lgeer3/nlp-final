@@ -86,11 +86,13 @@ def preprocess_data(
     val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
     print("loaded corpus")
 
+    '''
     sample_size = 5000  # or smaller for debugging
 
     train_texts = train_texts[:sample_size]
     val_texts = val_texts[:sample_size]
-
+    '''
+    
     trimmed_token_set = None
     if vocab_trimming:
         vocab = tokenizer.get_vocab()
