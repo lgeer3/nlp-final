@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 print("✅ importing math", flush=True)
 import math
 print("✅ importing gradscaler", flush=True)
-from torch.amp import GradScaler, autocast
+from torch.cuda.amp import GradScaler, autocast
 
 def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs_epochs.png"):
     epochs = range(1, len(train_losses) + 1)
@@ -75,7 +75,7 @@ def train_model(
         num_warmup_steps=50,
         num_training_steps=len(train_loader) * epochs
     )
-    scaler = GradScaler(enabled=mixed_precision, device_type="cuda")
+    scaler = GradScaler(enabled=mixed_precision)
 
     best_val_loss = float('inf')
 
@@ -101,7 +101,7 @@ def train_model(
             
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
             
-            with autocast(enabled=mixed_precision, device_type="cuda"):
+            with autocast(enabled=mixed_precision):
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
                 loss = output['loss'] / gradient_accumulation
 
