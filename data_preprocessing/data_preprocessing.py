@@ -86,7 +86,10 @@ def preprocess_data(
         input_ids = []
         for line in texts:
             ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
-            input_ids.extend(ids + [sep_id])  
+            if vocab_trimming:
+                input_ids.extend(ids + [sep_id])
+            else:
+                input_ids.extend(ids + [tokenizer.sep_token_id or 102])  
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
