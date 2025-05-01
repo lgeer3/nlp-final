@@ -46,7 +46,7 @@ def main():
     print("MAKING MODEL")
 
     model = Model(
-        hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=tokenizer.vocab_size if not args.vocab_trimming else args.vocab_size, 
+        hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=tokenizer.vocab_size if not args.vocab_trimming else len(token2id), 
                  block_size=args.block_size, n_head=args.n_head, attn_pdrop=0.1, resid_pdrop=0.1, 
                  embd_pdrop=0.1, token2id=token2id
     )
