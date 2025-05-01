@@ -150,8 +150,13 @@ def train_model(
         # Generate output
         generated_ids = model.generate(start_ids, max_new_tokens=50, temperature=0.7)
 
-        # Decode and print
-        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        if hasattr(model, "token2id") and model.token2id:
+            # Vocab trimming is on – use custom decoding
+            id2token = {v: k for k, v in model.token2id.items()}
+            generated_text = " ".join([id2token.get(i.item(), "<unk>") for i in generated_ids[0]])
+        else:
+            # Vocab trimming is off – use HuggingFace decode
+            generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
         print(f"\n Sample output after epoch {epoch+1}:\n{generated_text}\n")
 
     save_perplexity_plot(train_losses, val_losses)
