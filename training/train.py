@@ -105,7 +105,8 @@ def train_model(
                 scaler.update()
                 optimizer.zero_grad()
                 lr_scheduler.step()
-                total_loss += loss.item()
+            
+            total_loss += loss.item() * gradient_accumulation
 
             avg_loss_so_far = total_loss / (step + 1)
             progress_bar.set_postfix(loss=f"{avg_loss_so_far:.4f}")
