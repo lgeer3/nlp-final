@@ -42,7 +42,7 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
 def tokenize(text, tokenizer, token2id, unk_id):
     tokens = tokenizer.tokenize(text)
-    
+
     if token2id is not None:
         tokens = [t if t in token2id else "<unk>" for t in tokens]
         return [token2id.get(t, unk_id) for t in tokens]
@@ -97,10 +97,13 @@ def preprocess_data(
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
-        MAX_TOKENS = 200_000
+        '''
+        MAX_TOKENS = 500_000
         if len(input_ids) > MAX_TOKENS:
             print(f" Truncating input_ids from {len(input_ids)} → {MAX_TOKENS}", flush=True)
             input_ids = input_ids[:MAX_TOKENS]
+        '''
+        
 
         x_data, y_data = [], []
         for i in range(0, len(input_ids) - sequence_length):
