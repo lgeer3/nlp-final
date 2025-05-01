@@ -1,33 +1,20 @@
 from transformers import AutoTokenizer
 from datasets import load_dataset
 from collections import defaultdict
-from typing import List, Optional
-from torch.utils.data import TensorDataset
-from torch.utils.data import DataLoader
+from typing import List, Optional, Tuple
 import torch
+from torch.utils.data import TensorDataset, DataLoader
 
-'''
-def load_corpus(dataset_name="wikitext", subset="wikitext-103-raw-v1", split="train", sample_size=None) -> List[str]:
-    # retrieves the dataset and separates each example by whitescape
-    print("about to load corpus")
-    data = load_dataset(dataset_name, subset, split=split)
-    print("loaded corpus")
-    corpus = [x for x in data["text"] if x.strip()]
-    
-
-    return corpus
-'''
-def trim_vocab(vocab: dict, vocab_size: int) -> set:
-    # sorts the vocab by the positional score system and trims it to the requested size
+def trim_vocab(vocab: dict, vocab_size: int) -> List[str]:
+    # Sort and trim vocab by frequency rank (or use scored values)
     top_tokens = sorted(vocab.items(), key=lambda x: x[1], reverse=True)[:vocab_size]
-    return set(tok for tok, _ in top_tokens)
+    return [tok for tok, _ in top_tokens]
 
 def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
     freq = defaultdict(int)
     position = defaultdict(int)
     length = defaultdict(int)
 
-    # counts the per token frequency, occurency
     for line in corpus:
         words = line.strip().split()
         for word in words:
@@ -50,60 +37,57 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
     return scores
 
-
 def tokenize(text: str,
              tokenizer,
-             trimmed_token_set: Optional[set] = None) -> List[int]:
-    unk_token = tokenizer.unk_token or "<unk>"
+             token2id: Optional[dict] = None,
+             unk_id: Optional[int] = None) -> List[int]:
     tokens = tokenizer.tokenize(text)
-    if trimmed_token_set:
-        tokens = [t if t in trimmed_token_set else unk_token for t in tokens]
-    return tokenizer.convert_tokens_to_ids(tokens)
-    
+    if token2id:
+        tokens = [t if t in token2id else "<unk>" for t in tokens]
+        return [token2id.get(t, unk_id) for t in tokens]
+    else:
+        return tokenizer.convert_tokens_to_ids(tokens)
+
 def preprocess_data(
     dataset: str,
     batch_size: int,
     vocab_trimming: bool = False,
     vocab_size: int = 10000,
-    model: str="bert-base-cased",
-    sequence_length: int=64
-):
+    model: str = "bert-base-cased",
+    sequence_length: int = 64
+) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
-    print("loaded")
+    print("loaded tokenizer")
 
-    # Load dataset with proper splits
-    print("about to load corpus")
+    print("loading dataset...")
     data = load_dataset(dataset)
     train_texts = [x for x in data["dev"]["text"] if x.strip()]
     val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
-    print("loaded corpus")
+    print("loaded dataset")
 
-    '''
-    sample_size = 5000  # or smaller for debugging
+    token2id, unk_id = None, None
 
-    train_texts = train_texts[:sample_size]
-    val_texts = val_texts[:sample_size]
-    '''
-
-    trimmed_token_set = None
     if vocab_trimming:
+        print("scoring and trimming vocab...")
         vocab = tokenizer.get_vocab()
         scores = score_vocab(vocab, tokenizer, train_texts)
-        trimmed_token_set = trim_vocab(scores, vocab_size)
+        trimmed_token_list = trim_vocab(scores, vocab_size)
+        token2id = {tok: i for i, tok in enumerate(trimmed_token_list)}
+        unk_token = tokenizer.unk_token or "<unk>"
+        if unk_token not in token2id:
+            trimmed_token_list.append(unk_token)
+            token2id[unk_token] = len(token2id)
+        unk_id = token2id[unk_token]
+        print(f"trimmed vocab size: {len(token2id)}")
 
     def preprocess(texts):
         input_ids = []
         for line in texts:
-            ids = tokenize(line, tokenizer, trimmed_token_set)
-            input_ids.extend(ids + [tokenizer.sep_token_id])
-        '''
-        MAX_TOKENS = 200_000
-        
-        if len(input_ids) > MAX_TOKENS:
-            print(f"Truncating input_ids from {len(input_ids)} to {MAX_TOKENS}", flush=True)
-            input_ids = input_ids[:MAX_TOKENS]
-        '''
+            ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
+            input_ids.extend(ids + [tokenizer.sep_token_id or 102])  # fallback to [SEP]
+
+        print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
         x_data, y_data = [], []
         for i in range(0, len(input_ids) - sequence_length):
@@ -112,19 +96,17 @@ def preprocess_data(
             if len(x) == sequence_length and len(y) == sequence_length:
                 x_data.append(x)
                 y_data.append(y)
-        
 
-        # Convert to tensors
+        print(f"Total training pairs: {len(x_data)}", flush=True)
+
         x_tensor = torch.tensor(x_data, dtype=torch.long)
         y_tensor = torch.tensor(y_data, dtype=torch.long)
 
-        # Create TensorDataset
         return TensorDataset(x_tensor, y_tensor)
 
     train_dataset = preprocess(train_texts)
     val_dataset = preprocess(val_texts)
 
-    # Wrap the data into DataLoader objects
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
