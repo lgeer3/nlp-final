@@ -2,6 +2,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Optional
 
 
 class NewGELU(nn.Module):
@@ -84,7 +85,7 @@ class Model(nn.Module):
 
     def __init__(self, hidden_dim=256, hidden_layers=6, vocab_size=50257, 
                  block_size=1024, n_head=8, attn_pdrop=0.1, resid_pdrop=0.1, 
-                 embd_pdrop=0.1):
+                 embd_pdrop=0.1, token2id: Optional[dict] = None):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.vocab_size = vocab_size

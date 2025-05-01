@@ -36,7 +36,7 @@ def main():
 
     print("PREPROCESSING DATA")
 
-    train_loader, val_loader, tokenizer = preprocess_data(
+    train_loader, val_loader, tokenizer, token2id = preprocess_data(
         dataset=args.dataset,
         batch_size=args.batch_size,
         vocab_trimming=args.vocab_trimming,
@@ -48,7 +48,7 @@ def main():
     model = Model(
         hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=tokenizer.vocab_size if not args.vocab_trimming else args.vocab_size, 
                  block_size=args.block_size, n_head=args.n_head, attn_pdrop=0.1, resid_pdrop=0.1, 
-                 embd_pdrop=0.1
+                 embd_pdrop=0.1, token2id=token2id
     )
     model = model.to(device)
 
