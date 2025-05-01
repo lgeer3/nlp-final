@@ -42,8 +42,12 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
 def tokenize(text, tokenizer, token2id, unk_id):
     tokens = tokenizer.tokenize(text)
-    tokens = [t if t in token2id else "<unk>" for t in tokens]
-    return [token2id.get(t, unk_id) for t in tokens]
+    
+    if token2id is not None:
+        tokens = [t if t in token2id else "<unk>" for t in tokens]
+        return [token2id.get(t, unk_id) for t in tokens]
+    else:
+        return tokenizer.convert_tokens_to_ids(tokens)
 
 def preprocess_data(
     dataset: str,
