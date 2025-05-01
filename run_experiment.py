@@ -11,6 +11,7 @@ def parse_args():
     parser.add_argument('--dataset', type=str, required=True, help="Dataset name or path (e.g., 'databricks/databricks-dolly-15k')")
     parser.add_argument('--batch_size', type=int, default=32, help="Batch size for training")
     parser.add_argument('--block_size', type=int, default=1024, help="Block size for training")
+    parser.add_argument('--n_head', type=int, default=1024, help="Block size for training")
     parser.add_argument('--learning_rate', type=float, default=1e-5, help="Learning rate for the optimizer")
     parser.add_argument('--gradient_accumulation', type=int, default=8, help="how many steps you accumulate to form a 'large batch'.")
     # Model Architecture
@@ -45,8 +46,8 @@ def main():
     print("MAKING MODEL")
 
     model = Model(
-        hidden_dim=256, hidden_layers=6, vocab_size=50257, 
-                 block_size=1024, n_head=8, attn_pdrop=0.1, resid_pdrop=0.1, 
+        hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=args.vocab_size, 
+                 block_size=args.block_size, n_head=args.n_head, attn_pdrop=0.1, resid_pdrop=0.1, 
                  embd_pdrop=0.1
     )
     model = model.to(device)
