@@ -108,6 +108,11 @@ class Model(nn.Module):
         # init all weights
         self.apply(self._init_weights)
 
+        self.banned_token_ids = []
+        if vocab_size <= 30000:  # assuming you've trimmed
+            self.banned_token_ids = [i for i, tok in enumerate(token2id) if tok.startswith("[unused")]
+
+
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
@@ -170,6 +175,9 @@ class Model(nn.Module):
             # pluck the logits at the final step and scale by temperature
             logits = logits[:, -1, :] / temperature
             # optionally crop probabilities to only the top k options
+            if hasattr(self, "banned_token_ids"):
+                logits[:, self.banned_token_ids] = -float("inf")
+
             if top_k is not None:
                 v, _ = torch.topk(logits, top_k)
                 logits[logits < v[:, [-1]]] = -float('Inf')

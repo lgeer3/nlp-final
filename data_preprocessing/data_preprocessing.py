@@ -6,10 +6,12 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 
 def trim_vocab(vocab: dict, vocab_size: int) -> List[str]:
-    # Sort and trim vocab by frequency rank (or use scored values)
-    top_tokens = sorted(vocab.items(), key=lambda x: x[1], reverse=True)[:vocab_size]
+    filtered = [
+        (tok, score) for tok, score in vocab.items()
+        if not tok.startswith("[unused") and tok not in {"[CLS]", "[SEP]", "[PAD]", "[MASK]"}
+    ]
+    top_tokens = sorted(filtered, key=lambda x: x[1], reverse=True)[:vocab_size]
     return [tok for tok, _ in top_tokens]
-
 def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
     freq = defaultdict(int)
     position = defaultdict(int)
