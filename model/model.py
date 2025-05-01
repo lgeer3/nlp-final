@@ -109,9 +109,11 @@ class Model(nn.Module):
         # init all weights
         self.apply(self._init_weights)
 
+        self.token2id = token2id
         self.banned_token_ids = []
-        if vocab_size <= 30000:  # assuming you've trimmed
+        if token2id is not None:
             self.banned_token_ids = [id for tok, id in token2id.items() if tok.startswith("[unused")]
+
 
 
     def _init_weights(self, module):
