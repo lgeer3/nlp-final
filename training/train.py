@@ -146,9 +146,12 @@ def train_model(
         start_token_id = tokenizer.bos_token_id or tokenizer.cls_token_id or tokenizer.sep_token_id or 0
         start_ids = torch.tensor([[start_token_id]], dtype=torch.long).to(device)
 
+        prompt = "In the early 20th century"
+        input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+
 
         # Generate output
-        generated_ids = model.generate(start_ids, max_new_tokens=50, temperature=0.7)
+        generated_ids = model.generate(input_ids, max_new_tokens=50, temperature=0.7)
 
         if hasattr(model, "token2id") and model.token2id:
             # Vocab trimming is on – use custom decoding
