@@ -77,9 +77,9 @@ def preprocess_data(
         scores = score_vocab(vocab, tokenizer, train_texts)
         trimmed_token_list = trim_vocab(scores, vocab_size)
         token2id = {tok: i for i, tok in enumerate(trimmed_token_list)}
-        unk_token = tokenizer.unk_token or "<unk>"
+        unk_token = "<unk>"  # Use a clean, custom token
+        # Only add it if it doesn't already exist
         if unk_token not in token2id:
-            trimmed_token_list.append(unk_token)
             token2id[unk_token] = len(token2id)
         unk_id = token2id[unk_token]
         print(f"trimmed vocab size: {len(token2id)}")
