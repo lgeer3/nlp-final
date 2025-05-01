@@ -4,7 +4,12 @@ from data_preprocessing.data_preprocessing import preprocess_data
 from model.model import Model
 from training.train import train_model
 
-
+def print_hyperparameters(args):
+    print("🧠 Hyperparameter Configuration")
+    print("-" * 40)
+    for arg, value in sorted(vars(args).items()):
+        print(f"{arg:<20}: {value}")
+    print("-" * 40, flush=True)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -27,6 +32,7 @@ def parse_args():
 def main():
     print("✅ Python started", flush=True)
     args = parse_args()
+    print_hyperparameters(args)
 
     # set_seed(args.seed)
     #set_seed(42)
