@@ -40,16 +40,10 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
     return scores
 
-def tokenize(text: str,
-             tokenizer,
-             token2id: Optional[dict] = None,
-             unk_id: Optional[int] = None) -> List[int]:
+def tokenize(text, tokenizer, token2id, unk_id):
     tokens = tokenizer.tokenize(text)
-    if token2id:
-        tokens = [t if t in token2id else "<unk>" for t in tokens]
-        return [token2id.get(t, unk_id) for t in tokens]
-    else:
-        return tokenizer.convert_tokens_to_ids(tokens)
+    tokens = [t if t in token2id else "<unk>" for t in tokens]
+    return [token2id.get(t, unk_id) for t in tokens]
 
 def preprocess_data(
     dataset: str,
@@ -82,13 +76,17 @@ def preprocess_data(
         if unk_token not in token2id:
             token2id[unk_token] = len(token2id)
         unk_id = token2id[unk_token]
+        sep_token = "<sep>"
+        if sep_token not in token2id:
+            token2id[sep_token] = len(token2id)
+        sep_id = token2id[sep_token]
         print(f"trimmed vocab size: {len(token2id)}")
 
     def preprocess(texts):
         input_ids = []
         for line in texts:
             ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
-            input_ids.extend(ids + [tokenizer.sep_token_id or 102])  # fallback to [SEP]
+            input_ids.extend(ids + [sep_id])  
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
