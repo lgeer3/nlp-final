@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument('--save_path', type=str, default='./checkpoints/', help="Where to save model checkpoints")
     return parser.parse_args()
 
+
+
 def main():
     print("✅ Python started", flush=True)
     args = parse_args()
@@ -57,7 +59,13 @@ def main():
                  embd_pdrop=0.1, token2id=token2id
     )
     model = model.to(device)
-    print(f"Size of model: {model.num_parameters()} params")
+    def count_parameters(model):
+        total = sum(p.numel() for p in model.parameters())
+        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f"🧠 Total parameters: {total:,}")
+        print(f"🛠️  Trainable parameters: {trainable:,}")
+
+    count_parameters(model)
 
     print("TRAINING MODEL")
     train_model(
