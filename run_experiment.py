@@ -57,6 +57,7 @@ def main():
                  embd_pdrop=0.1, token2id=token2id
     )
     model = model.to(device)
+    print(f"Size of model: {model.num_parameters()} params")
 
     print("TRAINING MODEL")
     train_model(
