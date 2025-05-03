@@ -97,12 +97,12 @@ def preprocess_data(
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
-        '''
-        MAX_TOKENS = 500_000
+        
+        MAX_TOKENS = 1_000_000
         if len(input_ids) > MAX_TOKENS:
             print(f" Truncating input_ids from {len(input_ids)} → {MAX_TOKENS}", flush=True)
             input_ids = input_ids[:MAX_TOKENS]
-        '''
+        
         
 
         x_data, y_data = [], []
