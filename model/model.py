@@ -84,8 +84,8 @@ class Model(nn.Module):
     """ The full GPT language model with a context size of block_size """
 
     def __init__(self, hidden_dim=256, hidden_layers=6, vocab_size=50257, 
-                 block_size=1024, n_head=8, attn_pdrop=0.1, resid_pdrop=0.1, 
-                 embd_pdrop=0.1, token2id: Optional[dict] = None):
+                 block_size=1024, n_head=8, attn_pdrop=0.2, resid_pdrop=0.2, 
+                 embd_pdrop=0.2, token2id: Optional[dict] = None):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.vocab_size = vocab_size
