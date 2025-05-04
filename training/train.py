@@ -162,9 +162,12 @@ def train_model(
             for batch in val_loader:
                 if isinstance(batch, (list, tuple)):
                     input_ids = batch[0].to(device)
+                    labels = batch[1].to(device)
+                    attention_mask = batch[2].to(device) if len(batch) > 2 else None
                 else:  # if batch is a dict
                     input_ids = batch['input_ids'].to(device)
-                    attention_mask = batch.get('attention_mask', None)
+                    labels = batch['labels'].to(device)
+                    attention_mask = batch['attention_mask'].to(device)
 
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
