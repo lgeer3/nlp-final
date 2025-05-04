@@ -5,7 +5,7 @@ from model.model import Model
 from training.train import train_model
 
 def print_hyperparameters(args):
-    print("🧠 Hyperparameter Configuration")
+    print(" Hyperparameter Configuration")
     print("-" * 40)
     for arg, value in sorted(vars(args).items()):
         print(f"{arg:<20}: {value}")
@@ -21,6 +21,8 @@ def parse_args():
     parser.add_argument('--gradient_accumulation', type=int, default=8, help="how many steps you accumulate to form a 'large batch'.")
     # Model Architecture
     parser.add_argument('--vocab_trimming', action='store_true', help="Use vocab trimming")
+    parser.add_argument('--knowledge_distill', action='store_true', help="Use knowledge distillation")
+    parser.add_argument('--beta', type=float, default=0.5, help="Coefficient that determines strength of distillation")
     parser.add_argument('--vocab_size', type=int, default=10000, help="Vocab Size after trimming, only applies if vocab trimming is turned on")
     parser.add_argument('--hidden_dim', type=int, default=256, help="Hidden dimension size for model layers")
     parser.add_argument('--hidden_layers', type=int, default=4, help="Number of hidden layers in the model")
@@ -62,8 +64,8 @@ def main():
     def count_parameters(model):
         total = sum(p.numel() for p in model.parameters())
         trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        print(f"🧠 Total parameters: {total:,}")
-        print(f"🛠️  Trainable parameters: {trainable:,}")
+        print(f" Total parameters: {total:,}")
+        print(f"  Trainable parameters: {trainable:,}")
 
     count_parameters(model)
 
@@ -78,7 +80,9 @@ def main():
         save_model=args.save_model,
         save_path=args.save_path,
         gradient_accumulation=args.gradient_accumulation,
-        tokenizer=tokenizer
+        tokenizer=tokenizer,
+        knowledge_distill=args.knowledge_distill,
+        beta=args.beta
     )
 
 

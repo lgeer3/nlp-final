@@ -6,6 +6,7 @@ import sys
 import matplotlib.pyplot as plt
 import math
 from torch.cuda.amp import GradScaler, autocast
+from transformers import AutoModelForCausalLM
 
 def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs_epochs.png"):
     epochs = range(1, len(train_losses) + 1)
@@ -57,10 +58,15 @@ def train_model(
         epochs=3,
         learning_rate=1e-5,
         gradient_accumulation=8,
+        beta=0.5,
         mixed_precision=False,
+        knowledge_distill=False,
         save_model=False,
         save_path="./checkpoints/"
     ):
+    teacher_model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
+    teacher_model.eval()
+
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     lr_scheduler = get_scheduler(
         "linear",
@@ -95,8 +101,32 @@ def train_model(
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
             
             with autocast(enabled=mixed_precision):
-                output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                loss = output['loss'] / gradient_accumulation
+                if(knowledge_distill):
+                    output = model(idx=input_ids, targets=labels, mask=attention_mask)
+                    logits = output['logits']
+
+                    with torch.no_grad():
+                        teacher_logits = teacher_model(input_ids).logits
+                
+                    min_vocab_size = min(logits.size(-1), teacher_logits.size(-1))
+                    logits = logits[..., :min_vocab_size]
+                    teacher_logits = teacher_logits[..., :min_vocab_size]
+
+                    temperature = 2.0
+                    softmax = torch.nn.functional.softmax(logits / temperature, dim=-1)
+                    log_probs = torch.nn.functional.log_softmax(logits / temperature, dim=-1)
+
+                    kl_loss = torch.nn.functional.kl_div(log_probs, softmax, reduction='batchmean') * (temperature ** 2)
+
+                    ce_loss = output['loss']
+
+                    loss = ((1 - beta) * kl_loss + beta * ce_loss) / gradient_accumulation
+                else:
+                    output = model(idx=input_ids, targets=labels, mask=attention_mask)
+                    loss = output['loss'] / gradient_accumulation
+
+
+            
 
             scaler.scale(loss).backward()
 
