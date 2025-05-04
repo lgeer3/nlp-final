@@ -14,7 +14,7 @@ module load anaconda
 
 
 echo "✅ Python about to run: $(date)"
-/home/cs601-lgeer3/scr4-cs601-dkhasha1/cs601-lgeer3/nlp-final/env/bin/python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 64 --hidden_dim 256 --hidden_layers 4 --block_size 256 --epochs 5 --n_head 6 --knowledge_distill --beta 0.5 --learning_rate 1e-4 --save_model --save_path ./checkpoints/
+/home/cs601-lgeer3/scr4-cs601-dkhasha1/cs601-lgeer3/nlp-final/env/bin/python run_experiment.py --dataset dogtooth/default_project_dev_test --batch_size 64 --hidden_dim 256 --hidden_layers 4 --block_size 256 --epochs 5 --n_head 6 --knowledge_distill --beta 0.35 --learning_rate 1e-4 --save_model --save_path ./checkpoints/
 echo "✅ Python finished: $(date)";
 
 
