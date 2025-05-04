@@ -94,11 +94,13 @@ def train_model(
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
                 input_ids = batch[0].to(device)
-                attention_mask = batch[1].to(device) if len(batch) > 1 else None
+                labels = batch[1].to(device)
+                attention_mask = batch[2].to(device) if len(batch) > 2 else None
             # If batch is a dict
             else:
                 input_ids = batch['input_ids'].to(device)
-                attention_mask = batch.get('attention_mask', None)
+                labels = batch['labels'].to(device)
+                attention_mask = batch['attention_mask'].to(device)
             
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
             

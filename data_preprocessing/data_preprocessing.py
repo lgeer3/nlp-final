@@ -117,8 +117,8 @@ def preprocess_data(
 
         x_tensor = torch.tensor(x_data, dtype=torch.long)
         y_tensor = torch.tensor(y_data, dtype=torch.long)
-
-        return TensorDataset(x_tensor, y_tensor)
+        attention_masks = torch.ones_like(x_tensor)
+        return TensorDataset(x_tensor, y_tensor, attention_masks)
 
     train_dataset = preprocess(train_texts)
     val_dataset = preprocess(val_texts)
