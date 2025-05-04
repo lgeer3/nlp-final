@@ -130,6 +130,8 @@ def train_model(
                     input_ids = batch[0].to(device)
                 else:  # if batch is a dict
                     input_ids = batch['input_ids'].to(device)
+                    attention_mask = batch.get('attention_mask', None)
+                    
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels)
                 val_loss += output['loss'].item()
