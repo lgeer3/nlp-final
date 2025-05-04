@@ -65,6 +65,8 @@ def train_model(
         save_path="./checkpoints/"
     ):
     teacher_model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
+    for param in teacher_model.parameters():
+        param.requires_grad = False
     teacher_model.eval()
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
