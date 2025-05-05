@@ -35,7 +35,7 @@ class CausalSelfAttention(nn.Module):
         self.resid_dropout = nn.Dropout(resid_pdrop)
 
         # causal mask to ensure that attention is only applied to the left in the input sequence
-        self.register_buffer("causal_mask", torch.tril(torch.ones(block_size, block_size)))
+        self.register_buffer("causal_mask", torch.tril(torch.ones(block_size, block_size)).bool())
         
     def forward(self, x):
         B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
@@ -48,7 +48,8 @@ class CausalSelfAttention(nn.Module):
 
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-        att = att.masked_fill(self.causal_mask[:T, :T] == 0, float('-inf'))
+        mask = self.causal_mask[:T, :T].unsqueeze(0).unsqueeze(0)  # (1, 1, T, T)
+        att = att.masked_fill(mask == 0, float("-inf"))
         att = F.softmax(att, dim=-1)
         att = self.attn_dropout(att)
         y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
