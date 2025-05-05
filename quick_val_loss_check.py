@@ -1,65 +1,57 @@
 import torch
+import torch.nn.functional as F
 from model.model import Model
-from data_preprocessing.prepare_shakespeare_dataset import prepare_shakespeare_data
 
+def test_validation_loss():
+    # Step 1: Dummy input (batch=1, seq_len=5)
+    input_ids = torch.tensor([[10, 20, 30, 40, 50]])  # shape: [1, 5]
+    attention_mask = torch.ones_like(input_ids)
+    labels = input_ids.clone()
 
-def quick_val_loss_check():
-    # CPU mode only
-    device = "cpu"
-
-    # Minimal setup
-    batch_size = 2
-    sequence_length = 64
-    hidden_dim = 128
-    hidden_layers = 2
-    n_head = 4
-    block_size = 64
-
-    print("🔢 Loading small validation batch...")
-    _, val_loader, tokenizer, token2id = prepare_shakespeare_data(
-        batch_size=batch_size,
-        vocab_trimming=False,
-        model="bert-base-cased",
-        sequence_length=sequence_length
-    )
-
-    vocab_size = len(token2id) if token2id else tokenizer.vocab_size
-
-    print("🧠 Initializing small model on CPU...")
+    # Step 2: Minimal model config
+    vocab_size = 100
+    hidden_dim = 32
+    block_size = 5
     model = Model(
         hidden_dim=hidden_dim,
-        hidden_layers=hidden_layers,
+        hidden_layers=1,
         block_size=block_size,
-        n_head=n_head,
+        n_head=2,
         vocab_size=vocab_size,
-        token2id=token2id,
-    ).to(device)
+    )
 
     model.eval()
-    total_loss = 0.0
-    num_batches = 0
 
-    print("🔍 Running single validation step...")
+    # Step 3: Forward pass (no gradients)
     with torch.no_grad():
-        for step, batch in enumerate(val_loader):
-            input_ids = batch[0].to(device)
-            attention_mask = batch[1].to(device)
-            labels = input_ids.clone()
+        output = model(idx=input_ids, targets=labels, mask=attention_mask)
+        loss_model = output['loss'].item()
+        logits = output['logits']
 
-            output = model(idx=input_ids, targets=labels, mask=attention_mask)
-            loss_tensor = output['loss']
+    # Step 4: Shift targets to match model’s slicing
+    # Model already did: logits = logits[:, :-1, :]
+    targets = labels[:, 1:]  # shape: [1, 4]
+    logits = logits          # already shape: [1, 4, vocab_size]
 
-            print(f"Step {step+1}")
-            print(" input_ids:", input_ids[0][:10].tolist())
-            print(" logits shape:", output['logits'].shape)
-            print(" loss:", loss_tensor.item())
+    print("targets shape:", targets.shape)
+    print("logits shape:", logits.shape)
 
-            if torch.isnan(loss_tensor):
-                print("❌ Loss is NaN — something is wrong!")
-            break  # Just one batch
+    # Step 5: Flatten for loss
+    logits_flat = logits.view(-1, vocab_size)   # [4, vocab]
+    targets_flat = targets.view(-1)             # [4]
 
-    print("✅ Done.")
+    print("logits_flat:", logits_flat.shape)
+    print("targets_flat:", targets_flat.shape)
 
+    # Step 6: Manual loss calculation
+    loss_manual = F.cross_entropy(logits_flat, targets_flat, reduction='mean').item()
+
+    # Step 7: Compare
+    print(f"\n🔍 Model loss:  {loss_model:.6f}")
+    print(f"🧮 Manual loss: {loss_manual:.6f}")
+
+    assert abs(loss_model - loss_manual) < 1e-5, "❌ Validation loss mismatch!"
+    print("✅ Validation loss test passed.")
 
 if __name__ == "__main__":
-    quick_val_loss_check()
+    test_validation_loss()
