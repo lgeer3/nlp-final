@@ -234,7 +234,9 @@ class Model(nn.Module):
         position_embeddings = self.pos_emb(pos)
 
         x = self.drop(token_embeddings + position_embeddings)
-        x = self.blocks(x)
+        for block in self.blocks:
+            x = x + block['attn'](x)
+            x = x + block['mlp'](x)
         x = self.ln_f(x)
         logits = self.head(x)
 
