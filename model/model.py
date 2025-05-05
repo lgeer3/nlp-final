@@ -13,6 +13,54 @@ class NewGELU(nn.Module):
     def forward(self, x):
         return 0.5 * x * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0))))
 
+class GeGLU(nn.Module):
+     def __init__(self, hidden_dim, inner_dim=None):
+         super().__init__()
+         inner_dim = inner_dim or hidden_dim * 4
+         self.proj = nn.Linear(hidden_dim, 2 * inner_dim)
+         self.gelu = NewGELU()
+     def forward(self, x):
+         x, gate = self.proj(x).chunk(2, dim=-1)
+         return x * self.gelu(gate)
+         
+ 
+ 
+ class SwiGLU(nn.Module):
+     def __init__(self, hidden_dim, inner_dim = None):
+         super().__init__()
+         inner_dim = inner_dim or hidden_dim * 4
+         self.proj = nn.Linear(hidden_dim, 2 * inner_dim)
+     def forward(self, x):
+         x, gate = self.proj(x).chunk(2, dim=-1)
+         return x * torch.sigmoid(gate) # SiLU
+ 
+ class RMSNorm(nn.Module):
+     def __init__(self, dim: int, eps: float = 1e-6):
+         super().__init__()
+         self.eps = eps
+         self.weight = nn.Parameter(torch.ones(dim))
+ 
+     def _norm(self, x):
+         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+ 
+     def forward(self, x):
+         output = self._norm(x.float()).type_as(x)
+         return output * self.weight
+ 
+ class PreNorm(nn.Module):
+     def __init__(self, dim, fn, norm_type="layernorm"):
+         super().__init__()
+         self.fn = fn
+         if norm_type == "layernorm":
+             self.norm = nn.LayerNorm(dim)
+         elif norm_type == "rmsnorm":
+             self.norm = RMSNorm(dim)
+         else:
+             raise ValueError(f"Unknown norm_type: {norm_type}")
+ 
+     def forward(self, x, **kwargs):
+         return self.fn(self.norm(x), **kwargs)
+
 class CausalSelfAttention(nn.Module):
     """
     A vanilla multi-head masked self-attention layer with a projection at the end.
@@ -86,7 +134,9 @@ class Model(nn.Module):
 
     def __init__(self, hidden_dim=256, hidden_layers=6, vocab_size=50257, 
                  block_size=1024, n_head=8, attn_pdrop=0.2, resid_pdrop=0.2, 
-                 embd_pdrop=0.2, token2id: Optional[dict] = None):
+                 embd_pdrop=0.2, token2id: Optional[dict] = None,
+                 norm_type = "layernorm", 
+                 activation = "gelu"):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.vocab_size = vocab_size
@@ -98,13 +148,51 @@ class Model(nn.Module):
         self.drop = nn.Dropout(embd_pdrop)
 
         # transformer
-        self.blocks = nn.Sequential(*[
-            Block(hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop)
-            for _ in range(hidden_layers)
-        ])
+        self.blocks = nn.ModuleList()
+         for _ in range(hidden_layers):
+             # Attention part with PreNorm
+             attn = PreNorm(
+                 hidden_dim,
+                 CausalSelfAttention(hidden_dim, n_head, block_size, attn_pdrop, resid_pdrop),
+                 norm_type=norm_type
+             )
+             
+             # MLP part
+             if mlp_type == "gelu":
+                 mlp = nn.Sequential(
+                     nn.Linear(hidden_dim, 4 * hidden_dim),
+                     NewGELU(),
+                     nn.Linear(4 * hidden_dim, hidden_dim),
+                     nn.Dropout(resid_pdrop),
+                 )
+             elif mlp_type == "geglu":
+                 mlp = nn.Sequential(
+                     GeGLU(hidden_dim),
+                     nn.Linear(4 * hidden_dim, hidden_dim),
+                     nn.Dropout(resid_pdrop),
+                 )
+             elif mlp_type == "swiglu":
+                 mlp = nn.Sequential(
+                     SwiGLU(hidden_dim),
+                     nn.Linear(4 * hidden_dim, hidden_dim),
+                     nn.Dropout(resid_pdrop),
+                 )
+             else:
+                 raise ValueError(f"Unknown mlp_type: {mlp_type}")
+             
+             # MLP with PreNorm
+             mlp = PreNorm(hidden_dim, mlp, norm_type=norm_type)
+             
+             # Combine into a block
+             block = nn.ModuleDict({
+                 'attn': attn,
+                 'mlp': mlp,
+             })
+             self.blocks.append(block)
+ 
         
         # decoder head
-        self.ln_f = nn.LayerNorm(hidden_dim)
+        self.ln_f = RMSNorm(hidden_dim) if norm_type == "rmsnorm" else nn.LayerNorm(hidden_dim)
         self.head = nn.Linear(hidden_dim, vocab_size, bias=False)
 
         # init all weights
@@ -124,8 +212,8 @@ class Model(nn.Module):
                 torch.nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
-        elif isinstance(module, nn.LayerNorm):
-            torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, (nn.LayerNorm, RMSNorm)):
+            torch.nn.init.zeros_(module.bias) if hasattr(module, 'bias') else None
             torch.nn.init.ones_(module.weight)
 
     def forward(self, idx, targets=None, mask=None):
