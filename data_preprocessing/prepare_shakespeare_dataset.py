@@ -52,5 +52,6 @@ def prepare_shakespeare_data(
         vocab_trimming=vocab_trimming,
         vocab_size=vocab_size,
         model=model,
-        sequence_length=sequence_length
+        sequence_length=sequence_length,
+        dataset_obj=dataset_dict
     )

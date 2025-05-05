@@ -55,14 +55,18 @@ def preprocess_data(
     vocab_trimming: bool = False,
     vocab_size: int = 10000,
     model: str = "bert-base-cased",
-    sequence_length: int = 64
+    sequence_length: int = 64,
+    dataset_obj=None
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
     print("loaded tokenizer")
 
     print("loading dataset...")
-    data = load_dataset(dataset)
+    if dataset_obj is not None:
+        data = dataset_obj
+    else:
+        data = load_dataset(dataset)
     train_texts = [x for x in data["dev"]["text"] if x.strip()]
     val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
     print("loaded dataset")
