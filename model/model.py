@@ -166,27 +166,27 @@ class Model(nn.Module):
             )
              
             # MLP part
-            if mlp_type == "gelu":
+            if activation == "gelu":
                 mlp = nn.Sequential(
                     nn.Linear(hidden_dim, 4 * hidden_dim),
                     NewGELU(),
                     nn.Linear(4 * hidden_dim, hidden_dim),
                     nn.Dropout(resid_pdrop),
                 )
-            elif mlp_type == "geglu":
+            elif activation == "geglu":
                 mlp = nn.Sequential(
                     GeGLU(hidden_dim),
                     nn.Linear(4 * hidden_dim, hidden_dim),
                     nn.Dropout(resid_pdrop),
                 )
-            elif mlp_type == "swiglu":
+            elif activation == "swiglu":
                 mlp = nn.Sequential(
                     SwiGLU(hidden_dim),
                     nn.Linear(4 * hidden_dim, hidden_dim),
                     nn.Dropout(resid_pdrop),
                 )
             else:
-                raise ValueError(f"Unknown mlp_type: {mlp_type}")
+                raise ValueError(f"Unknown mlp_type: {activation}")
              
             # MLP with PreNorm
             mlp = PreNorm(hidden_dim, mlp, norm_type=norm_type)
