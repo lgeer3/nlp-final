@@ -105,25 +105,22 @@ def preprocess_data(
         
         
 
-        x_data, y_data = [], []
+        x_data = []
         for i in range(0, len(input_ids) - sequence_length):
             x = input_ids[i:i + sequence_length]
-            y = input_ids[i + 1:i + 1 + sequence_length]
-            if len(x) == sequence_length and len(y) == sequence_length:
+            if len(x) == sequence_length:
                 x_data.append(x)
-                y_data.append(y)
 
         print(f"Total training pairs: {len(x_data)}", flush=True)
 
         x_tensor = torch.tensor(x_data, dtype=torch.long)
-        y_tensor = torch.tensor(y_data, dtype=torch.long)
         attention_masks = torch.ones_like(x_tensor)
-        return TensorDataset(x_tensor, y_tensor, attention_masks)
+        return TensorDataset(x_tensor, attention_masks)
 
     train_dataset = preprocess(train_texts)
     val_dataset = preprocess(val_texts)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     return train_loader, val_loader, tokenizer, token2id

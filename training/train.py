@@ -94,12 +94,10 @@ def train_model(
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
                 input_ids = batch[0].to(device)
-                labels = batch[1].to(device)
                 attention_mask = batch[2].to(device) if len(batch) > 2 else None
             # If batch is a dict
             else:
                 input_ids = batch['input_ids'].to(device)
-                labels = batch['labels'].to(device)
                 attention_mask = batch['attention_mask'].to(device)
             
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
@@ -128,9 +126,6 @@ def train_model(
                 else:
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
                     loss = output['loss'] / gradient_accumulation
-
-
-            
 
             scaler.scale(loss).backward()
 
@@ -162,11 +157,9 @@ def train_model(
             for batch in val_loader:
                 if isinstance(batch, (list, tuple)):
                     input_ids = batch[0].to(device)
-                    labels = batch[1].to(device)
                     attention_mask = batch[2].to(device) if len(batch) > 2 else None
                 else:  # if batch is a dict
                     input_ids = batch['input_ids'].to(device)
-                    labels = batch['labels'].to(device)
                     attention_mask = batch['attention_mask'].to(device)
 
                 labels = input_ids.clone()
