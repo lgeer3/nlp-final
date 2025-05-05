@@ -141,9 +141,6 @@ def train_model(
             progress_bar.set_postfix(loss=f"{avg_loss_so_far:.4f}")
 
 
-        if total_loss > 0:
-            optimizer.step()
-            optimizer.zero_grad()
 
 
         avg_train_loss = total_loss / len(train_loader)
@@ -164,9 +161,11 @@ def train_model(
 
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                val_loss += output['loss'].item()
+                print("input_ids shape:", input_ids.shape)
+                val_loss += output['loss'].item() * input_ids.numel()  # total tokens
+                total_tokens += input_ids.numel()
 
-        avg_val_loss = val_loss / len(val_loader)
+        avg_val_loss = val_loss / total_tokens
         val_losses.append(avg_val_loss)
         print(f"Validation Loss: {avg_val_loss:.4f}")
 
