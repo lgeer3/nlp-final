@@ -184,12 +184,11 @@ def train_model(
         # Generate output
         generated_ids = model.generate(input_ids, max_new_tokens=50, temperature=0.7)
 
-        if hasattr(model, "token2id") and model.token2id:
-            # Vocab trimming is on – use custom decoding
+        if model.token2id:
             id2token = {v: k for k, v in model.token2id.items()}
-            generated_text = " ".join([id2token.get(i.item(), "<unk>") for i in generated_ids[0]])
+            tokens = [id2token.get(i.item(), "<unk>") for i in generated_ids[0]]
+            generated_text = tokenizer.convert_tokens_to_string(tokens)
         else:
-            # Vocab trimming is off – use HuggingFace decode
             generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
         print(f"\n Sample output after epoch {epoch+1}:\n{generated_text}\n")
 
