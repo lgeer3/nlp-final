@@ -23,6 +23,7 @@ def prepare_shakespeare_data(
     vocab_size=10000,
     model="bert-base-cased",
     sequence_length=128,
+    **kwargs
 ):
     # Download dataset
     path = download_shakespeare()
