@@ -62,9 +62,9 @@ def preprocess_data(
     print("loaded tokenizer")
 
     print("loading dataset...")
-    data = load_dataset(dataset)
-    train_texts = [x for x in data["dev"]["text"] if x.strip()]
-    val_texts = [x for x in data["dev_test"]["text"] if x.strip()]
+    data = load_dataset("wikitext", "wikitext-2-v1")
+    train_texts = [x for x in data["train"]["text"] if x.strip()]
+    val_texts = [x for x in data["validation"]["text"] if x.strip()]
     print("loaded dataset")
 
     token2id, unk_id = None, None
