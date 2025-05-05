@@ -1,7 +1,7 @@
 import os
 from datasets import DatasetDict, Dataset
 from transformers import AutoTokenizer
-from data_preprocessing import preprocess_data
+from data_preprocessing.data_preprocessing import preprocess_data
 
 
 def download_shakespeare(path="shakespeare/input.txt"):
