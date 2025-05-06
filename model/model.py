@@ -263,6 +263,7 @@ class Model(nn.Module):
                 loss = (loss * mask).sum() / mask.sum()
             else:
                 loss = loss.mean()
+        
 
         return SimpleNamespace(logits=logits, loss=loss)
 

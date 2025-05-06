@@ -127,6 +127,7 @@ def train_model(
                     loss = ((1 - beta) * kl_loss + beta * ce_loss) * token_count / gradient_accumulation
                 else:
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
+                    assert output.loss is not None, "Loss is None — make sure targets are passed and loss is computed"
                     loss = output.loss * token_count / gradient_accumulation
 
             scaler.scale(loss).backward()
@@ -170,7 +171,7 @@ def train_model(
                 val_loss += output.loss.item() * token_count.item()
                 val_tokens += token_count.item()
 
-        avg_val_loss = val_loss / val_tokens  # ✅ correct
+        avg_val_loss = val_loss / val_tokens
         val_losses.append(avg_val_loss)
         print(f"Validation Loss: {avg_val_loss:.4f}")
 
