@@ -178,7 +178,7 @@ def train_model(
 
         if save_model and avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
-            torch.save(model.state_dict(), f"{save_path}/best_model_epoch{epoch+1}.pt")
+            model.save_pretrained(f"{save_path}/best_model_epoch{epoch+1}", from_pt=True)
             print(f"Saved best model (loss={avg_val_loss:.4f})")
 
         prompt = "In the early 20th century, "
