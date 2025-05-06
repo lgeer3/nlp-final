@@ -95,14 +95,14 @@ def train_model(
             # If batch is a tuple (input_ids, attention_mask)
             if isinstance(batch, (list, tuple)):
                 input_ids = batch[0].to(device)
-                attention_mask = batch[2].to(device) if len(batch) > 2 else None
+                attention_mask = batch[1].to(device) if len(batch) > 1 else None
             # If batch is a dict
             else:
                 input_ids = batch['input_ids'].to(device)
                 attention_mask = batch['attention_mask'].to(device)
             
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
-            token_count = attention_mask[:, 1:].sum() if attention_mask is not None else input_ids[:, 1:].numel()
+            token_count = attention_mask.sum() if attention_mask is not None else input_ids.numel()
 
             with autocast(enabled=mixed_precision):
                 if(knowledge_distill):
@@ -128,7 +128,7 @@ def train_model(
                 else:
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
                     assert output.loss is not None, "Loss is None — make sure targets are passed and loss is computed"
-                    loss = output.loss * token_count / gradient_accumulation
+                    loss = output.loss / gradient_accumulation
 
             scaler.scale(loss).backward()
 
@@ -160,16 +160,17 @@ def train_model(
             for batch in val_loader:
                 if isinstance(batch, (list, tuple)):
                     input_ids = batch[0].to(device)
-                    attention_mask = batch[2].to(device) if len(batch) > 2 else None
+                    attention_mask = batch[1].to(device) if len(batch) > 1 else None
                 else:  # if batch is a dict
                     input_ids = batch['input_ids'].to(device)
                     attention_mask = batch['attention_mask'].to(device)
 
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                token_count = attention_mask[:, 1:].sum() if attention_mask is not None else input_ids[:, 1:].numel()
+                token_count = attention_mask.sum() if attention_mask is not None else input_ids.numel()
                 val_loss += output.loss.item() * token_count
                 val_tokens += token_count
+
 
         avg_val_loss = val_loss / val_tokens
         val_losses.append(avg_val_loss)
