@@ -1,0 +1,4 @@
+✅ SLURM job started: Mon May  5 15:14:41 EDT 2025
+gpuz03
+✅ Python about to run: Mon May  5 15:14:42 EDT 2025
+slurmstepd: error: *** JOB 1163011 ON gpuz03 CANCELLED AT 2025-05-05T15:19:53 ***

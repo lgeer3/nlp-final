@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=3, help="Number of training epochs")
     parser.add_argument('--save_model', action='store_true', help="Save the best model during training")
     parser.add_argument('--save_path', type=str, default='./checkpoints/', help="Where to save model checkpoints")
+    parser.add_argument('--norm_type', type = str, default = 'layernorm', help="What type of layer normalization")
+    parser.add_argument('--activation', type = str, default = 'gelu', help = "Specify what type of activation to use")
     return parser.parse_args()
 
 
@@ -51,6 +53,7 @@ def main():
         batch_size=args.batch_size,
         vocab_trimming=args.vocab_trimming,
         vocab_size=args.vocab_size,
+        sequence_length = args.batch_size
     )
 
     print("MAKING MODEL")
@@ -58,7 +61,9 @@ def main():
     model = Model(
         hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=tokenizer.vocab_size if not args.vocab_trimming else len(token2id), 
                  block_size=args.block_size, n_head=args.n_head, attn_pdrop=0.1, resid_pdrop=0.1, 
-                 embd_pdrop=0.1, token2id=token2id
+                 embd_pdrop=0.1, token2id=token2id,
+                 norm_type = args.norm_type, 
+                 activation = args.activation
     )
     model = model.to(device)
     def count_parameters(model):

@@ -1,0 +1,5 @@
+✅ SLURM job started: Sun May  4 22:05:24 EDT 2025
+gpuz03
+✅ Python about to run: Sun May  4 22:05:24 EDT 2025
+/cm/local/apps/slurm/var/spool/job1134066/slurm_script: line 17: /home/cs601-edionne2/scr4-cs601-dkhasha1/cs601-edionne2/nlp-final/env/bin/python: No such file or directory
+✅ Python finished: Sun May  4 22:05:25 EDT 2025

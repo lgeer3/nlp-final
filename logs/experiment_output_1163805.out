@@ -1,0 +1,11 @@
+✅ SLURM job started: Mon May  5 16:24:40 EDT 2025
+gpuz03
+✅ Python about to run: Mon May  5 16:24:40 EDT 2025
+Traceback (most recent call last):
+  File "/home/cs601-edionne2/nlp-final/run_experiment.py", line 4, in <module>
+    from model.model import Model
+  File "/home/cs601-edionne2/nlp-final/model/model.py", line 28
+    class SwiGLU(nn.Module):
+                            ^
+IndentationError: unindent does not match any outer indentation level
+✅ Python finished: Mon May  5 16:26:12 EDT 2025

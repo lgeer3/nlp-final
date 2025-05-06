@@ -1,0 +1,5 @@
+✅ SLURM job started: Sun May  4 22:04:55 EDT 2025
+gpuz03
+✅ Python about to run: Sun May  4 22:04:58 EDT 2025
+/cm/local/apps/slurm/var/spool/job1134037/slurm_script: line 17: /home/cs601-lgeer3/scr4-cs601-dkhasha1/cs601-lgeer3/nlp-final/env/bin/python: Permission denied
+✅ Python finished: Sun May  4 22:04:59 EDT 2025
