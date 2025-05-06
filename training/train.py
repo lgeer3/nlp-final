@@ -86,6 +86,7 @@ def train_model(
     for epoch in range(epochs):
         model.train()
         total_loss = 0.0
+        total_tokens = 0
 
         optimizer.zero_grad()
 
@@ -101,7 +102,8 @@ def train_model(
                 attention_mask = batch['attention_mask'].to(device)
             
             labels = input_ids.clone()  # For LM, labels = input_ids (shift handled in model)
-            
+            token_count = attention_mask[:, 1:].sum() if attention_mask is not None else input_ids[:, 1:].numel()
+
             with autocast(enabled=mixed_precision):
                 if(knowledge_distill):
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
@@ -122,10 +124,10 @@ def train_model(
 
                     ce_loss = output['loss']
 
-                    loss = ((1 - beta) * kl_loss + beta * ce_loss) / gradient_accumulation
+                    loss = ((1 - beta) * kl_loss + beta * ce_loss) * token_count / gradient_accumulation
                 else:
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                    loss = output['loss'] / gradient_accumulation
+                    loss = output['loss'] * token_count / gradient_accumulation
 
             scaler.scale(loss).backward()
 
@@ -135,9 +137,10 @@ def train_model(
                 optimizer.zero_grad()
                 lr_scheduler.step()
             
-            total_loss += loss.item() * gradient_accumulation
+            total_loss += (output['loss'].item() * token_count.item())
+            total_tokens += token_count.item()
 
-            avg_loss_so_far = total_loss / (step + 1)
+            avg_loss_so_far = total_loss / total_tokens
             progress_bar.set_postfix(loss=f"{avg_loss_so_far:.4f}")
 
 
@@ -150,6 +153,8 @@ def train_model(
         # Validation
         model.eval()
         val_loss = 0.0
+        val_tokens = 0
+
         with torch.no_grad():
             for batch in val_loader:
                 if isinstance(batch, (list, tuple)):
@@ -161,11 +166,11 @@ def train_model(
 
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                print("input_ids shape:", input_ids.shape)
-                val_loss += output['loss'].item() * input_ids.numel()  # total tokens
-                total_tokens += input_ids.numel()
+                token_count = attention_mask[:, 1:].sum() if attention_mask is not None else input_ids[:, 1:].numel()
+                val_loss += output['loss'].item() * token_count.item()
+                val_tokens += token_count.item()
 
-        avg_val_loss = val_loss / total_tokens
+        avg_val_loss = val_loss / val_tokens  # ✅ correct
         val_losses.append(avg_val_loss)
         print(f"Validation Loss: {avg_val_loss:.4f}")
 
@@ -174,14 +179,8 @@ def train_model(
             torch.save(model.state_dict(), f"{save_path}/best_model_epoch{epoch+1}.pt")
             print(f"Saved best model (loss={avg_val_loss:.4f})")
 
-        start_token_id = tokenizer.bos_token_id or tokenizer.cls_token_id or tokenizer.sep_token_id or 0
-        start_ids = torch.tensor([[start_token_id]], dtype=torch.long).to(device)
-
         prompt = "My lord,"
         input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
-
-
-        # Generate output
         generated_ids = model.generate(input_ids, max_new_tokens=50, temperature=0.7)
 
         if model.token2id:
@@ -190,6 +189,7 @@ def train_model(
             generated_text = tokenizer.convert_tokens_to_string(tokens)
         else:
             generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+
         print(f"\n Sample output after epoch {epoch+1}:\n{generated_text}\n")
 
     save_perplexity_plot(train_losses, val_losses)
