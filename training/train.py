@@ -138,8 +138,8 @@ def train_model(
                 optimizer.zero_grad()
                 lr_scheduler.step()
             
-            total_loss += (output.loss.item() * token_count.item())
-            total_tokens += token_count.item()
+            total_loss += (output.loss.item() * token_count)
+            total_tokens += token_count
 
             avg_loss_so_far = total_loss / total_tokens
             progress_bar.set_postfix(loss=f"{avg_loss_so_far:.4f}")
@@ -168,8 +168,8 @@ def train_model(
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
                 token_count = attention_mask[:, 1:].sum() if attention_mask is not None else input_ids[:, 1:].numel()
-                val_loss += output.loss.item() * token_count.item()
-                val_tokens += token_count.item()
+                val_loss += output.loss.item() * token_count
+                val_tokens += token_count
 
         avg_val_loss = val_loss / val_tokens
         val_losses.append(avg_val_loss)
