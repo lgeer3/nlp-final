@@ -180,7 +180,7 @@ def train_model(
             torch.save(model.state_dict(), f"{save_path}/best_model_epoch{epoch+1}.pt")
             print(f"Saved best model (loss={avg_val_loss:.4f})")
 
-        prompt = "My lord,"
+        prompt = "In the early 20th century, "
         input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
         generated_ids = model.generate(input_ids, max_new_tokens=50, temperature=0.7)
 
