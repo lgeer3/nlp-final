@@ -147,7 +147,7 @@ def train_model(
 
 
 
-        avg_train_loss = total_loss / len(train_loader)
+        avg_train_loss = total_loss / total_tokens
         train_losses.append(avg_train_loss)
         print(f"Epoch {epoch + 1}, Train Loss: {avg_train_loss:.4f}")
 
