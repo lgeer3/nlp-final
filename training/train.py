@@ -42,7 +42,7 @@ def evaluate_model(model, dataloader, device):
             labels = batch['labels'].to(device)
 
             output = model(input_ids=input_ids, attention_mask=attention_mask)
-            predictions = output['logits']
+            predictions = output.logits
             predictions = torch.argmax(predictions, dim=1)
 
             dev_accuracy.add_batch(predictions=predictions, references=labels)
@@ -107,7 +107,7 @@ def train_model(
             with autocast(enabled=mixed_precision):
                 if(knowledge_distill):
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                    logits = output['logits']
+                    logits = output.logits
 
                     with torch.no_grad():
                         teacher_logits = teacher_model(input_ids).logits
@@ -122,12 +122,12 @@ def train_model(
 
                     kl_loss = torch.nn.functional.kl_div(log_probs, softmax, reduction='batchmean') * (temperature ** 2)
 
-                    ce_loss = output['loss']
+                    ce_loss = output.loss
 
                     loss = ((1 - beta) * kl_loss + beta * ce_loss) * token_count / gradient_accumulation
                 else:
                     output = model(idx=input_ids, targets=labels, mask=attention_mask)
-                    loss = output['loss'] * token_count / gradient_accumulation
+                    loss = output.loss * token_count / gradient_accumulation
 
             scaler.scale(loss).backward()
 
@@ -137,7 +137,7 @@ def train_model(
                 optimizer.zero_grad()
                 lr_scheduler.step()
             
-            total_loss += (output['loss'].item() * token_count.item())
+            total_loss += (output.loss.item() * token_count.item())
             total_tokens += token_count.item()
 
             avg_loss_so_far = total_loss / total_tokens
@@ -167,7 +167,7 @@ def train_model(
                 labels = input_ids.clone()
                 output = model(idx=input_ids, targets=labels, mask=attention_mask)
                 token_count = attention_mask[:, 1:].sum() if attention_mask is not None else input_ids[:, 1:].numel()
-                val_loss += output['loss'].item() * token_count.item()
+                val_loss += output.loss.item() * token_count.item()
                 val_tokens += token_count.item()
 
         avg_val_loss = val_loss / val_tokens  # ✅ correct

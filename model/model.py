@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional
+from types import SimpleNamespace
 
 
 class NewGELU(nn.Module):
@@ -263,7 +264,7 @@ class Model(nn.Module):
             else:
                 loss = loss.mean()
 
-        return {'logits': logits, 'loss': loss}
+        return SimpleNamespace(logits=logits, loss=loss)
 
     @torch.no_grad()
     @torch.cuda.amp.autocast()
