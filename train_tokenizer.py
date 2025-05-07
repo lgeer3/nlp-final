@@ -22,7 +22,7 @@ print(f"🔹 Training tokenizer on {len(texts)} samples...")
 # Initialize tokenizer
 tokenizer = Tokenizer(models.BPE())
 tokenizer.normalizer = Sequence([NFD(), Lowercase(), StripAccents()])
-tokenizer.pre_tokenizer = ByteLevel()
+tokenizer.pre_tokenizer = ByteLevel(add_prefix_space=True)
 
 trainer = BpeTrainer(
     vocab_size=vocab_size,
