@@ -2,7 +2,7 @@ import argparse
 import torch
 from data_preprocessing.prepare_shakespeare_dataset import prepare_shakespeare_data as preprocess_data
 
-from model.model import Model
+from model.model import Model, CustomGPTConfig
 from training.train import train_model
 
 def print_hyperparameters(args):
@@ -59,13 +59,13 @@ def main():
 
     print("MAKING MODEL")
 
-    model = Model(
-        hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=tokenizer.vocab_size if not args.vocab_trimming else len(token2id), 
+    config = CustomGPTConfig(hidden_dim=args.hidden_dim, hidden_layers=args.hidden_layers, vocab_size=tokenizer.vocab_size if not args.vocab_trimming else len(token2id), 
                  block_size=args.block_size, n_head=args.n_head, attn_pdrop=0.1, resid_pdrop=0.1, 
                  embd_pdrop=0.1, token2id=token2id,
                  norm_type = args.norm_type, 
-                 activation = args.activation
-    )
+                 activation = args.activation)
+
+    model = Model(config=config)
     model = model.to(device)
     def count_parameters(model):
         total = sum(p.numel() for p in model.parameters())
