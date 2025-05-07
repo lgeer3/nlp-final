@@ -9,15 +9,15 @@ from tokenizers.decoders import ByteLevel as ByteLevelDecoder
 
 # Parameters
 dataset_name = "dogtooth/default_project_dev_test"
-vocab_size = 30000
+vocab_size = 50257
 save_dir = "./tokenizer_custom/"
 
-print("🔹 Loading dataset...")
+print("Loading dataset...")
 dataset = load_dataset(dataset_name)
 texts = [x["text"] for x in dataset["dev"] if x["text"].strip()] + \
         [x["text"] for x in dataset["dev_test"] if x["text"].strip()]
 
-print(f"🔹 Training tokenizer on {len(texts)} samples...")
+print(f"Training tokenizer on {len(texts)} samples...")
 
 # Initialize tokenizer
 tokenizer = Tokenizer(models.BPE())
