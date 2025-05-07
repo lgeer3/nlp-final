@@ -5,7 +5,7 @@ import os
 import json
 
 FULL_TOKENIZER_PATH = "./tokenizer_custom/tokenizer.json"
-TRIMMED_TOKENIZER_SAVE_DIR = "./tokenizer_custom"
+TRIMMED_TOKENIZER_SAVE_DIR = "./tokenizer_custom/"
 TARGET_VOCAB_SIZE = 20000  # or 20000, 30000...
 
 print("🔹 Loading original tokenizer...")
