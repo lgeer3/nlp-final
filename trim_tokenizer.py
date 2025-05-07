@@ -4,7 +4,7 @@ import os
 
 # --- Config ---
 INPUT_JSON_PATH = "./tokenizer_custom/tokenizer.json"
-VOCAB_KEEP_ITEMS = 20000
+VOCAB_KEEP_ITEMS = 30000
 SAVE_DIR = f"./tokenizer_custom/"
 
 # --- Load tokenizer.json ---
@@ -16,32 +16,29 @@ with open(INPUT_JSON_PATH, "r", encoding="utf-8") as f:
 model = tokenizer_json["model"]
 model_type = model["type"]
 
-print(f"🔍 Model type: {model_type}")
+print(f" Model type: {model_type}")
 
-if model_type == "BPE":
-    vocab = model["vocab"]
-    merges = model["merges"]
+vocab = model["vocab"]
+merges = model["merges"]
 
-    print(f"  Trimming vocab to top {VOCAB_KEEP_ITEMS} tokens by ID...")
-    new_vocab = {token: i for token, i in vocab.items() if i < VOCAB_KEEP_ITEMS}
+print(f"  Trimming vocab to top {VOCAB_KEEP_ITEMS} tokens by ID...")
+new_vocab = {token: i for token, i in vocab.items() if i < VOCAB_KEEP_ITEMS}
 
-    new_merges = []
-    for pair in merges:
-        if isinstance(pair, str):
-            a, b = pair.split()
-        else:
-            a, b = pair 
-        new_token = a + b
-        if a in new_vocab and b in new_vocab and new_token in new_vocab:
-            new_merges.append(f"{a} {b}")
+new_merges = []
+for pair in merges:
+    if isinstance(pair, str):
+        a, b = pair.split()
+    else:
+        a, b = pair 
+    new_token = a + b
+    if a in new_vocab and b in new_vocab and new_token in new_vocab:
+        new_merges.append(f"{a} {b}")
 
-    print(f" Kept {len(new_vocab)} tokens and {len(new_merges)} merges")
+print(f" Kept {len(new_vocab)} tokens and {len(new_merges)} merges")
 
-    model["vocab"] = new_vocab
-    model["merges"] = new_merges
+model["vocab"] = new_vocab
+model["merges"] = new_merges
 
-else:
-    raise ValueError(f"Unsupported model type: {model_type}")
 
 # --- Save the new tokenizer JSON ---
 from tokenizers import Tokenizer as RawTokenizer
