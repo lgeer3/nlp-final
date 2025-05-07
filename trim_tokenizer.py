@@ -51,12 +51,12 @@ tokens_in_merges = set(t for pair in merges for t in pair)
 most_common_tokens.update(tokens_in_merges)
 
 # Trim merge list to only valid pairs and track required tokens
+required_tokens = set(SPECIAL_TOKENS)  # Only seed with special tokens
 valid_merges = []
-required_tokens = set(most_common_tokens)
 
 for a, b in merges:
-    if a in required_tokens and b in required_tokens:
-        merged = a + b
+    merged = a + b
+    if merged in most_common_tokens and a in required_tokens and b in required_tokens:
         valid_merges.append((a, b))
         required_tokens.add(merged)
 
