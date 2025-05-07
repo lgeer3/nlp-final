@@ -50,6 +50,18 @@ with open(merges_path, "r", encoding="utf-8") as f:
 tokens_in_merges = set(t for pair in merges for t in pair)
 most_common_tokens.update(tokens_in_merges)
 
+merged_tokens = set()
+current_tokens = set(tokens_in_merges)
+for a, b in merges:
+    if a in current_tokens and b in current_tokens:
+        merged = a + b
+        merged_tokens.add(merged)
+        current_tokens.add(merged)
+
+print(f" Adding {len(merged_tokens)} merged output tokens")
+most_common_tokens.update(merged_tokens)
+
+
 print(f" Retained {len(most_common_tokens)} tokens total (with specials)")
 
 # Build filtered vocab using original token to id mapping
