@@ -48,10 +48,7 @@ most_common_tokens.update(tokens_in_merges)
 
 print(f" Retained {len(most_common_tokens)} tokens total (with specials)")
 
-
-# Extract text again so we can re-learn merges from just top tokens
-model_info = tokenizer.model
-merges = model_info.get_merges()
+# Build filtered vocab
 filtered_vocab = {tok: i for i, tok in enumerate(sorted(most_common_tokens))}
 
 
