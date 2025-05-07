@@ -4,8 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional
 from types import SimpleNamespace
-from transformers import PretrainedConfig
-from transformers import PreTrainedModel
+from transformers import PretrainedConfig, PreTrainedModel, AutoConfig, AutoModelForCausalLM
 
 class CustomGPTConfig(PretrainedConfig):
     model_type = "custom_gpt"
@@ -395,3 +394,6 @@ class Model(PreTrainedModel):
             idx = torch.cat((idx, idx_next), dim=1)
 
         return idx
+
+AutoConfig.register("custom_gpt", CustomGPTConfig)
+AutoModelForCausalLM.register(CustomGPTConfig, Model)
