@@ -5,8 +5,9 @@ import os
 import json
 
 FULL_TOKENIZER_PATH = "./tokenizer_custom/tokenizer.json"
-TRIMMED_TOKENIZER_SAVE_DIR = "./tokenizer_custom/"
+SAVE_DIR = "./tokenizer_custom/"
 TARGET_VOCAB_SIZE = 20000  # or 20000, 30000...
+os.makedirs(SAVE_DIR, exist_ok=True)
 
 print("🔹 Loading original tokenizer...")
 tokenizer = Tokenizer.from_file(FULL_TOKENIZER_PATH)
@@ -16,43 +17,36 @@ print("🔹 Loading dataset...")
 dataset = load_dataset("dogtooth/default_project_dev_test")
 texts = [x["text"] for split in dataset for x in dataset[split] if x["text"].strip()]
 
-print("🔹 Encoding dataset...")
-counter = Counter()
+# Count token frequency
+print("🔹 Scoring token frequency...")
+token_counts = Counter()
 for text in texts:
     encoding = tokenizer.encode(text)
-    for id in encoding.ids:
-        counter[id] += 1
+    for token_id in encoding.ids:
+        token_counts[token_id] += 1
 
-# Sort token IDs by frequency
-most_common_ids = [tok_id for tok_id, _ in counter.most_common(TARGET_VOCAB_SIZE)]
+# Sort tokens by frequency
+most_common_ids = [tok_id for tok_id, _ in token_counts.most_common(TARGET_VOCAB_SIZE)]
 
-# Map token IDs to their strings
-id_to_token = {v: k for k, v in tokenizer.get_vocab().items()}
-kept_tokens = [id_to_token[i] for i in most_common_ids if i in id_to_token]
 
-# Add special tokens explicitly
-special_tokens = ["<unk>", "<pad>", "<bos>", "<eos>", "<sep>"]
-for token in special_tokens:
-    if token not in kept_tokens:
-        kept_tokens.append(token)
+# Preserve special tokens
+special_tokens = ["<pad>", "<unk>", "<bos>", "<eos>", "<sep>"]
+vocab = tokenizer.get_vocab()
+special_ids = [vocab[tok] for tok in special_tokens if tok in vocab]
 
-print(f"Trimmed vocab: {len(kept_tokens)} tokens (target was {TARGET_VOCAB_SIZE})")
+# Final allowed token set
+allowed_token_ids = set(most_common_ids + special_ids)
+all_token_ids = set(vocab.values())
+banned_token_ids = sorted(list(all_token_ids - allowed_token_ids))
 
-# Rebuild tokenizer with limited vocab
-tokenizer = Tokenizer(models.BPE())
-tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=True)
-tokenizer.decoder = decoders.ByteLevel()
+print(f"✅ Keeping {len(allowed_token_ids)} tokens | Banning {len(banned_token_ids)}")
 
-trainer = trainers.BpeTrainer(
-    vocab_size=len(kept_tokens),
-    special_tokens=special_tokens,
-    initial_alphabet=[],
-    vocab=None
-)
+# Save banned token IDs
+banned_path = os.path.join(SAVE_DIR, "banned_token_ids.json")
+with open(banned_path, "w") as f:
+    json.dump(banned_token_ids, f)
 
-tokenizer.train_from_iterator(texts, trainer=trainer)
+# Save copy of tokenizer for consistency
+tokenizer.save(os.path.join(SAVE_DIR, "tokenizer.json"))
 
-save_path = TRIMMED_TOKENIZER_SAVE_DIR.format(len(kept_tokens))
-os.makedirs(save_path, exist_ok=True)
-tokenizer.save(os.path.join(save_path, "tokenizer.json"))
-print(f"✅ Trimmed tokenizer saved to {save_path}")
+print(f"📦 Saved to: {SAVE_DIR}")
