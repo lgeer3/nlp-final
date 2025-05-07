@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import List, Optional, Tuple
 import torch
 from torch.utils.data import TensorDataset, DataLoader
+from transformers import PreTrainedTokenizerFast
 
 def trim_vocab(vocab: dict, vocab_size: int) -> List[str]:
     filtered = [
@@ -59,7 +60,10 @@ def preprocess_data(
     dataset_obj=None
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
-    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
+    tokenizer.pad_token = "<pad>"
+    tokenizer.unk_token = "<unk>"
+    tokenizer.sep_token = "<sep>"
     print("loaded tokenizer")
 
     print("loading dataset...")
@@ -73,7 +77,8 @@ def preprocess_data(
 
     token2id, unk_id = None, None
 
-    if vocab_trimming:
+
+    if vocab_trimming and "custom" not in model:
         print("scoring and trimming vocab...")
         vocab = tokenizer.get_vocab()
         scores = score_vocab(vocab, tokenizer, train_texts)
@@ -89,12 +94,16 @@ def preprocess_data(
             token2id[sep_token] = len(token2id)
         sep_id = token2id[sep_token]
         print(f"trimmed vocab size: {len(token2id)}")
+    else:
+        print("⚠️ Skipping vocab trimming (already using custom tokenizer?)")
+        token2id = None
+
 
     def preprocess(texts):
         input_ids = []
         for line in texts:
             ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
-            if vocab_trimming:
+            if vocab_trimming and "custom" not in model:
                 input_ids.extend(ids + [sep_id])
             else:
                 input_ids.extend(ids + [tokenizer.sep_token_id or 102])  
