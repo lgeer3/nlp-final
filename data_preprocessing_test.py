@@ -57,10 +57,10 @@ def run_preprocessing_tests():
 
 
     if vocab_trimming:
-        assert token2id is not None, "❌ token2id missing despite vocab_trimming=True"
+        assert token2id is not None, " token2id missing despite vocab_trimming=True"
         print("✅ token2id exists with size:", len(token2id))
     else:
-        assert token2id is None, "❌ token2id should be None when vocab_trimming=False"
+        assert token2id is None, " token2id should be None when vocab_trimming=False"
         print("✅ token2id correctly not returned")
 
     print("\n🎉 All preprocessing checks completed.\n")
