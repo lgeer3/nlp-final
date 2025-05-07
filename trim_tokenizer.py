@@ -53,10 +53,12 @@ most_common_tokens.update(tokens_in_merges)
 merged_tokens = set()
 current_tokens = set(tokens_in_merges)
 for a, b in merges:
-    if a in current_tokens and b in current_tokens:
+    if a in most_common_tokens and b in most_common_tokens:
         merged = a + b
-        merged_tokens.add(merged)
-        current_tokens.add(merged)
+        if len(merged_tokens) < TARGET_VOCAB_SIZE:  # optional hard cap
+            merged_tokens.add(merged)
+            most_common_tokens.add(merged)
+
 
 print(f" Adding {len(merged_tokens)} merged output tokens")
 most_common_tokens.update(merged_tokens)
