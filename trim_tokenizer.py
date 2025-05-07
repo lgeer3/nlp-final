@@ -20,6 +20,10 @@ vocab = tokenizer.get_vocab()
 id_to_token = {v: k for k, v in vocab.items()}
 tokenizer.model.save("./tokenizer_merges_backup")
 
+with open("./tokenizer_merges_backup/vocab.json", "r", encoding="utf-8") as f:
+    original_vocab = json.load(f)
+
+
 # Load dataset and flatten all text
 print(" Loading dataset...")
 dataset = load_dataset("dogtooth/default_project_dev_test")
@@ -48,16 +52,22 @@ most_common_tokens.update(tokens_in_merges)
 
 print(f" Retained {len(most_common_tokens)} tokens total (with specials)")
 
-# Build filtered vocab
-with open("./tokenizer_merges_backup/vocab.json", "r", encoding="utf-8") as f:
-    original_vocab = json.load(f)
-
-# Build filtered vocab using original token → id mapping
+# Build filtered vocab using original token to id mapping
 filtered_vocab = {
     tok: original_vocab[tok]
     for tok in most_common_tokens
     if tok in original_vocab
 }
+
+# Add any missing merge tokens to vocab using their original IDs
+missing_merge_tokens = tokens_in_merges - set(filtered_vocab.keys())
+if missing_merge_tokens:
+    print(f"  Adding {len(missing_merge_tokens)} missing merge tokens to vocab...")
+    for tok in missing_merge_tokens:
+        if tok in original_vocab:
+            filtered_vocab[tok] = original_vocab[tok]
+        else:
+            print(f"❌Token {tok} not found in original vocab. This may cause merge failure.")
 
 
 print(f" Rebuilding tokenizer with {len(filtered_vocab)} tokens and {len(merges)} merges")
