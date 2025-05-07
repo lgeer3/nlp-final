@@ -1,6 +1,6 @@
 import argparse
 import torch
-from data_preprocessing.prepare_shakespeare_dataset import prepare_shakespeare_data as preprocess_data
+from data_preprocessing.data_preprocessing import preprocess_data
 
 from model.model import Model, CustomGPTConfig
 from training.train import train_model
