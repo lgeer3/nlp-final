@@ -202,13 +202,13 @@ def train_model(
     best_val_loss = val_losses[best_epoch]
 
     config_summary = {
-        "activation": model.config.activation,
-        "norm_type": model.config.norm_type,
-        "knowledge_distill": knowledge_distill,
-        "best_epoch": best_epoch + 1,
-        "best_val_loss": best_val_loss,
-        "best_val_perplexity": math.exp(best_val_loss),
-        "params": sum(p.numel() for p in model.parameters() if p.requires_grad)
+        "activation": str(model.config.activation),
+        "norm_type": str(model.config.norm_type),
+        "knowledge_distill": bool(knowledge_distill),
+        "best_epoch": int(best_epoch + 1),
+        "best_val_loss": float(best_val_loss),
+        "best_val_perplexity": float(math.exp(best_val_loss)),
+        "params": int(sum(p.numel() for p in model.parameters() if p.requires_grad))
     }
 
     with open(f"{save_path}/experiment_summary.json", "w") as f:
