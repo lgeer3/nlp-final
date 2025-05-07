@@ -78,35 +78,11 @@ def preprocess_data(
     token2id, unk_id = None, None
 
 
-    if vocab_trimming and "custom" not in model:
-        print("scoring and trimming vocab...")
-        vocab = tokenizer.get_vocab()
-        scores = score_vocab(vocab, tokenizer, train_texts)
-        trimmed_token_list = trim_vocab(scores, vocab_size)
-        token2id = {tok: i for i, tok in enumerate(trimmed_token_list)}
-        unk_token = "<unk>"  # Use a clean, custom token
-        # Only add it if it doesn't already exist
-        if unk_token not in token2id:
-            token2id[unk_token] = len(token2id)
-        unk_id = token2id[unk_token]
-        sep_token = "<sep>"
-        if sep_token not in token2id:
-            token2id[sep_token] = len(token2id)
-        sep_id = token2id[sep_token]
-        print(f"trimmed vocab size: {len(token2id)}")
-    else:
-        print("⚠️ Skipping vocab trimming (already using custom tokenizer?)")
-        token2id = None
-
-
     def preprocess(texts):
         input_ids = []
         for line in texts:
             ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
-            if vocab_trimming and "custom" not in model:
-                input_ids.extend(ids + [sep_id])
-            else:
-                input_ids.extend(ids + [tokenizer.sep_token_id or 102])  
+            input_ids.extend(ids + [tokenizer.sep_token_id or 102])  
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
