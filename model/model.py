@@ -4,6 +4,35 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional
 from types import SimpleNamespace
+from transformers import PretrainedConfig
+from transformers import PreTrainedModel
+
+class CustomGPTConfig(PretrainedConfig):
+    model_type = "custom_gpt"
+
+    def __init__(self, 
+                 hidden_dim=256,
+                 hidden_layers=6,
+                 vocab_size=50257,
+                 block_size=1024,
+                 n_head=8,
+                 attn_pdrop=0.2,
+                 resid_pdrop=0.2,
+                 embd_pdrop=0.2,
+                 norm_type="layernorm",
+                 activation="gelu",
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.hidden_dim = hidden_dim
+        self.hidden_layers = hidden_layers
+        self.vocab_size = vocab_size
+        self.block_size = block_size
+        self.n_head = n_head
+        self.attn_pdrop = attn_pdrop
+        self.resid_pdrop = resid_pdrop
+        self.embd_pdrop = embd_pdrop
+        self.norm_type = norm_type
+        self.activation = activation
 
 
 class NewGELU(nn.Module):
@@ -139,9 +168,79 @@ class Block(nn.Module):
         x = x + self.mlp(self.ln_2(x))
         return x
 
-class Model(nn.Module):
+class Model(PreTrainedModel):
     """ The full GPT language model with a context size of block_size """
+    def __init__(self, config: CustomGPTConfig):
+        super().__init__(config)
+        self.config = config
+        self.hidden_dim = self.config.hidden_dim
+        self.vocab_size = self.config.vocab_size
+        self.block_size = self.config.block_size
 
+        # input embedding stem
+        self.tok_emb = nn.Embedding(self.config.vocab_size, self.config.hidden_dim)
+        self.pos_emb = nn.Embedding(self.config.block_size, self.config.hidden_dim)
+        self.drop = nn.Dropout(self.config.embd_pdrop)
+
+        # transformer
+        self.blocks = nn.ModuleList()
+        for _ in range(self.config.hidden_layers):
+            # Attention part with PreNorm
+            attn = PreNorm(
+                self.config.hidden_dim,
+                CausalSelfAttention(self.config.hidden_dim, self.config.n_head, self.config.block_size, self.config.attn_pdrop, self.config.resid_pdrop),
+                norm_type=self.config.norm_type
+            )
+             
+            # MLP part
+            if self.config.activation == "gelu":
+                mlp = nn.Sequential(
+                    nn.Linear(self.config.hidden_dim, 4 * self.config.hidden_dim),
+                    NewGELU(),
+                    nn.Linear(4 * self.config.hidden_dim, self.config.hidden_dim),
+                    nn.Dropout(self.config.resid_pdrop),
+                )
+            elif self.config.activation == "geglu":
+                mlp = nn.Sequential(
+                    GeGLU(self.config.hidden_dim),
+                    nn.Linear(4 * self.config.hidden_dim, self.config.hidden_dim),
+                    nn.Dropout(self.config.resid_pdrop),
+                )
+            elif self.config.activation == "swiglu":
+                mlp = nn.Sequential(
+                    SwiGLU(self.config.hidden_dim),
+                    nn.Linear(4 * self.config.hidden_dim, self.config.hidden_dim),
+                    nn.Dropout(self.config.resid_pdrop),
+                )
+            else:
+                raise ValueError(f"Unknown mlp_type: {self.config.activation}")
+             
+            # MLP with PreNorm
+            mlp = PreNorm(self.config.hidden_dim, mlp, norm_type=self.config.norm_type)
+             
+            # Combine into a block
+            block = nn.ModuleDict({
+                'attn': attn,
+                'mlp': mlp,
+            })
+            self.blocks.append(block)
+ 
+        
+        # decoder head
+        self.ln_f = RMSNorm(self.config.hidden_dim) if self.config.norm_type == "rmsnorm" else nn.LayerNorm(self.config.hidden_dim)
+        self.head = nn.Linear(self.config.hidden_dim, self.config.vocab_size, bias=False)
+
+        # init all weights
+        self.apply(self._init_weights)
+
+        self.token2id = self.config.token2id
+        self.banned_token_ids = []
+        if self.config.token2id is not None:
+            self.banned_token_ids = [id for tok, id in self.config.token2id.items() if tok.startswith("[unused")]
+
+
+
+    '''
     def __init__(self, hidden_dim=256, hidden_layers=6, vocab_size=50257, 
                  block_size=1024, n_head=8, attn_pdrop=0.2, resid_pdrop=0.2, 
                  embd_pdrop=0.2, token2id: Optional[dict] = None,
@@ -212,7 +311,7 @@ class Model(nn.Module):
         self.banned_token_ids = []
         if token2id is not None:
             self.banned_token_ids = [id for tok, id in token2id.items() if tok.startswith("[unused")]
-
+    '''
 
 
     def _init_weights(self, module):
