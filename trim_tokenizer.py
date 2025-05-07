@@ -65,32 +65,23 @@ most_common_tokens.update(merged_tokens)
 print(f" Retained {len(most_common_tokens)} tokens total (with specials)")
 
 # Build filtered vocab using original token to id mapping
-filtered_vocab = {
-    tok: original_vocab[tok]
-    for tok in most_common_tokens
-    if tok in original_vocab
-}
+filtered_vocab = {tok: idx for idx, tok in enumerate(sorted(most_common_tokens))}
 
-# Add any missing merge tokens to vocab using their original IDs
-missing_merge_tokens = tokens_in_merges - set(filtered_vocab.keys())
-if missing_merge_tokens:
-    print(f"  Adding {len(missing_merge_tokens)} missing merge tokens to vocab...")
-    for tok in missing_merge_tokens:
-        if tok in original_vocab:
-            filtered_vocab[tok] = original_vocab[tok]
-        else:
-            print(f"❌Token {tok} not found in original vocab. This may cause merge failure.")
+vocab_set = set(filtered_vocab.keys())
+bad_merges = [(a, b) for (a, b) in merges if a not in vocab_set or b not in vocab_set]
+if bad_merges:
+    print(f" Warning: {len(bad_merges)} merges reference missing tokens")
+    merges = [pair for pair in merges if pair not in bad_merges]
 
 
 print(f" Rebuilding tokenizer with {len(filtered_vocab)} tokens and {len(merges)} merges")
 
 new_model = BPE(vocab=filtered_vocab, merges=merges, unk_token="<unk>")
-
 trimmed_tokenizer = Tokenizer(new_model)
 trimmed_tokenizer.normalizer = Sequence([NFD(), Lowercase(), StripAccents()])
 trimmed_tokenizer.pre_tokenizer = ByteLevel(add_prefix_space=True)
 trimmed_tokenizer.decoder = ByteLevelDecoder()
 
-# --- Save the trimmed tokenizer ---
+# Save the trimmed tokenizer
 trimmed_tokenizer.save(os.path.join(SAVE_DIR, "tokenizer.json"))
-print(f" Trimmed tokenizer saved to {SAVE_DIR}/tokenizer.json")
+print(f"\n✅ Trimmed tokenizer saved to {SAVE_DIR}/tokenizer.json")
