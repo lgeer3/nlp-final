@@ -395,5 +395,6 @@ class Model(PreTrainedModel):
 
         return idx
 
+Model.config_class = CustomGPTConfig
 AutoConfig.register("custom_gpt", CustomGPTConfig)
 AutoModelForCausalLM.register(CustomGPTConfig, Model)
