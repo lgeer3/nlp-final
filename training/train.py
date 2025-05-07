@@ -192,12 +192,8 @@ def train_model(
         input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
         generated_ids = model.generate(input_ids, max_new_tokens=50, temperature=0.7)
 
-        if model.token2id:
-            id2token = {v: k for k, v in model.token2id.items()}
-            tokens = [id2token.get(i.item(), "<unk>") for i in generated_ids[0]]
-            generated_text = tokenizer.convert_tokens_to_string(tokens)
-        else:
-            generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        
+        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
         print(f"\n Sample output after epoch {epoch+1}:\n{generated_text}\n")
 

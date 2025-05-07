@@ -4,10 +4,12 @@ from tokenizers.normalizers import NFD, Lowercase, StripAccents, Sequence
 from tokenizers.pre_tokenizers import Whitespace
 from tokenizers.trainers import BpeTrainer
 import os
+from tokenizers.pre_tokenizers import ByteLevel
+from tokenizers.decoders import ByteLevel as ByteLevelDecoder
 
 # Parameters
 dataset_name = "dogtooth/default_project_dev_test"
-vocab_size = 50257
+vocab_size = 30000
 save_dir = "./tokenizer_custom/"
 
 print("🔹 Loading dataset...")
@@ -20,7 +22,7 @@ print(f"🔹 Training tokenizer on {len(texts)} samples...")
 # Initialize tokenizer
 tokenizer = Tokenizer(models.BPE())
 tokenizer.normalizer = Sequence([NFD(), Lowercase(), StripAccents()])
-tokenizer.pre_tokenizer = Whitespace()
+tokenizer.pre_tokenizer = ByteLevel()
 
 trainer = BpeTrainer(
     vocab_size=vocab_size,
@@ -37,7 +39,7 @@ tokenizer.post_processor = processors.TemplateProcessing(
     special_tokens=[("<sep>", tokenizer.token_to_id("<sep>"))],
 )
 
-tokenizer.decoder = decoders.BPEDecoder()
+tokenizer.decoder = ByteLevelDecoder()
 tokenizer.enable_truncation(max_length=256)
 
 # Save tokenizer files
