@@ -27,10 +27,13 @@ if model_type == "BPE":
 
     new_merges = []
     for pair in merges:
-        a, b = pair.split()
+        if isinstance(pair, str):
+            a, b = pair.split()
+        else:
+            a, b = pair 
         new_token = a + b
         if a in new_vocab and b in new_vocab and new_token in new_vocab:
-            new_merges.append(pair)
+            new_merges.append(f"{a} {b}")
 
     print(f" Kept {len(new_vocab)} tokens and {len(new_merges)} merges")
 
@@ -42,7 +45,7 @@ else:
 
 # --- Save the new tokenizer JSON ---
 from tokenizers import Tokenizer as RawTokenizer
-print(f"\n💾 Saving trimmed tokenizer to {SAVE_DIR}/tokenizer.json")
+print(f"\n Saving trimmed tokenizer to {SAVE_DIR}/tokenizer.json")
 trimmed = RawTokenizer.from_str(json.dumps(tokenizer_json))
 trimmed.save(f"{SAVE_DIR}/tokenizer.json")
 print("Done.")
