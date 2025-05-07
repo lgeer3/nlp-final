@@ -7,10 +7,13 @@ import matplotlib.pyplot as plt
 import math
 from torch.cuda.amp import GradScaler, autocast
 from transformers import AutoModelForCausalLM
+import json
 
 def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs_epochs.png"):
     epochs = range(1, len(train_losses) + 1)
     train_perplexities = [math.exp(loss) for loss in train_losses]
+    save_name = f"{save_path}/perplexity_vs_epochs.png"
+
 
     plt.figure(figsize=(8, 5))
     plt.plot(epochs, train_perplexities, label="Train Perplexity", marker='o')
@@ -24,8 +27,8 @@ def save_perplexity_plot(train_losses, val_losses=None, save_path="perplexity_vs
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(save_path)
-    print(f" Saved perplexity plot to {save_path}")
+    plt.savefig(save_name)
+    print(f" Saved perplexity plot to {save_name}")
 
 
 def evaluate_model(model, dataloader, device):
@@ -182,7 +185,7 @@ def train_model(
 
             model.save_pretrained(save_dir)
             model.config.save_pretrained(save_dir)
-            
+
             print(f"Saved best model (loss={avg_val_loss:.4f})")
 
         prompt = "In the early 20th century, "
@@ -198,4 +201,21 @@ def train_model(
 
         print(f"\n Sample output after epoch {epoch+1}:\n{generated_text}\n")
 
-    save_perplexity_plot(train_losses, val_losses)
+        
+    best_epoch = min(range(len(val_losses)), key=lambda i: val_losses[i])
+    best_val_loss = val_losses[best_epoch]
+
+    config_summary = {
+        "activation": model.config.activation,
+        "norm_type": model.config.norm_type,
+        "knowledge_distill": knowledge_distill,
+        "best_epoch": best_epoch + 1,
+        "best_val_loss": best_val_loss,
+        "best_val_perplexity": math.exp(best_val_loss),
+        "params": sum(p.numel() for p in model.parameters() if p.requires_grad)
+    }
+
+    with open(f"{save_path}/experiment_summary.json", "w") as f:
+        json.dump(config_summary, f, indent=2)
+
+    save_perplexity_plot(train_losses, val_losses, save_path=save_path)
