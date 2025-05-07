@@ -5,7 +5,7 @@ import os
 # --- Config ---
 INPUT_JSON_PATH = "./tokenizer_custom/tokenizer.json"
 VOCAB_KEEP_ITEMS = 20000
-SAVE_DIR = f"./tokenizer_trimmed_{VOCAB_KEEP_ITEMS}"
+SAVE_DIR = f"./tokenizer_custom/"
 
 # --- Load tokenizer.json ---
 print("\n Loading tokenizer from", INPUT_JSON_PATH)
