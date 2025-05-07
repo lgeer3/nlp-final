@@ -18,6 +18,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 tokenizer = Tokenizer.from_file(FULL_TOKENIZER_PATH)
 vocab = tokenizer.get_vocab()
 id_to_token = {v: k for k, v in vocab.items()}
+tokenizer.model.save("./tokenizer_merges_backup")
 
 # Load dataset and flatten all text
 print(" Loading dataset...")
@@ -36,6 +37,14 @@ most_common_ids = [tok_id for tok_id, _ in token_freq.most_common(TARGET_VOCAB_S
 most_common_tokens = {id_to_token[i] for i in most_common_ids if i in id_to_token}
 for tok in SPECIAL_TOKENS:
     most_common_tokens.add(tok)
+
+# Ensure all tokens used in merges are preserved
+merges_path = "./tokenizer_merges_backup/merges.txt"
+with open(merges_path, "r", encoding="utf-8") as f:
+    merges = [tuple(line.strip().split()) for line in f if not line.startswith("#")]
+
+tokens_in_merges = set(t for pair in merges for t in pair)
+most_common_tokens.update(tokens_in_merges)
 
 print(f" Retained {len(most_common_tokens)} tokens total (with specials)")
 
