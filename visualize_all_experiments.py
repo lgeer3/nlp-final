@@ -16,8 +16,9 @@ for root, dirs, files in os.walk(CHECKPOINTS_DIR):
                     data = json.load(f)
                 vocab_tag = "full" if "full" in root.lower() else "trimmed"
                 data["config"] = f'{vocab_tag} | {data["activation"]} + {data["norm_type"]} + {"distill" if data["knowledge_distill"] else "no distill"}'
+        
                 if data["knowledge_distill"]:
-                    print("distill")
+                    print(data["norm_type"])
                     if "swiglu" in data["norm_type"] and "full" not in root.lower():
                         print("1e-4")
                         data["best_val_perplexity"] = math.exp(5.6843)
