@@ -54,7 +54,8 @@ def main():
         batch_size=args.batch_size,
         vocab_trimming=args.vocab_trimming,
         vocab_size=args.vocab_size,
-        sequence_length = args.batch_size
+        sequence_length = args.batch_size,
+        distill=args.knowledge_distill
     )
 
     print("MAKING MODEL")

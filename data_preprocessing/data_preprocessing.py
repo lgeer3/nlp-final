@@ -57,16 +57,19 @@ def preprocess_data(
     vocab_size: int = 10000,
     model: str = "bert-base-cased",
     sequence_length: int = 64,
-    dataset_obj=None
+    dataset_obj=None,
+    distill=False
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
-    '''
-    tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
-    tokenizer.pad_token = "<pad>"
-    tokenizer.unk_token = "<unk>"
-    tokenizer.sep_token = "<sep>"
-    '''
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    if distill:
+        tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    else:
+        tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
+        tokenizer.pad_token = "<pad>"
+        tokenizer.unk_token = "<unk>"
+        tokenizer.sep_token = "<sep>"
+
+    
     print("loaded tokenizer")
 
     print("loading dataset...")
