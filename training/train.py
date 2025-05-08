@@ -120,7 +120,7 @@ def train_model(
                     teacher_logits = teacher_logits[..., :min_vocab_size]
 
                     temperature = 2.0
-                    softmax = torch.nn.functional.softmax(logits / temperature, dim=-1)
+                    softmax = torch.nn.functional.softmax(teacher_logits / temperature, dim=-1)
                     log_probs = torch.nn.functional.log_softmax(logits / temperature, dim=-1)
 
                     kl_loss = torch.nn.functional.kl_div(log_probs, softmax, reduction='batchmean') * (temperature ** 2)
