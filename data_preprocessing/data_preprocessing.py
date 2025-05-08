@@ -60,10 +60,13 @@ def preprocess_data(
     dataset_obj=None
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
+    '''
     tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
     tokenizer.pad_token = "<pad>"
     tokenizer.unk_token = "<unk>"
     tokenizer.sep_token = "<sep>"
+    '''
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
     print("loaded tokenizer")
 
     print("loading dataset...")
@@ -91,8 +94,6 @@ def preprocess_data(
         if len(input_ids) > MAX_TOKENS:
             print(f" Truncating input_ids from {len(input_ids)} → {MAX_TOKENS}", flush=True)
             input_ids = input_ids[:MAX_TOKENS]
-        
-        
 
         x_data = []
         for i in range(0, len(input_ids) - sequence_length):
