@@ -18,15 +18,15 @@ for root, dirs, files in os.walk(CHECKPOINTS_DIR):
                 data["config"] = f'{vocab_tag} | {data["activation"]} + {data["norm_type"]} + {"distill" if data["knowledge_distill"] else "no distill"}'
                 if data["knowledge_distill"]:
                     print("distill")
-                    if data["norm_type"] == "swiglu" and data["activation"] == "rmsnorm" and "full" not in root.lower():
+                    if "swiglu" in data["norm_type"] and "full" not in root.lower():
                         print("1e-4")
                         data["best_val_perplexity"] = math.exp(5.6843)
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 1e-4'
-                    elif data["norm_type"] == "swiglu" and data["activation"] == "rmsnorm" and "full" in root.lower():
+                    elif "swiglu" in data["norm_type"] and "full" in root.lower():
                         data["best_val_perplexity"] = math.exp(5.8976)
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 5e-5'
                         print("1e-5")
-                    elif data["norm_type"] == "gelu" and "full" in root.lower():
+                    elif "full" in root.lower():
                         data["best_val_perplexity"] = math.exp(5.8651)
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 5e-5'
                         print("reg")
