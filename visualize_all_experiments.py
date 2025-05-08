@@ -7,17 +7,18 @@ CHECKPOINTS_DIR = "./checkpoints/"
 
 results = []
 
-# Scan all subfolders under checkpoints/
 for root, dirs, files in os.walk(CHECKPOINTS_DIR):
     for file in files:
         if file == "experiment_summary.json":
-            with open(os.path.join(root, file)) as f:
-                data = json.load(f)
-
-                vocab_tag = "full" if "base_full" in root.lower() else "trimmed"
+            path = os.path.join(root, file)
+            try:
+                with open(path) as f:
+                    data = json.load(f)
+                vocab_tag = "full" if "full" in root.lower() else "trimmed"
                 data["config"] = f'{vocab_tag} | {data["activation"]} + {data["norm_type"]} + {"distill" if data["knowledge_distill"] else "no distill"}'
-
                 results.append(data)
+            except json.JSONDecodeError:
+                print(f"⚠️ Skipping invalid JSON: {path}")
 
 # Sort by perplexity
 results.sort(key=lambda x: x["best_val_perplexity"])
