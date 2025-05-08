@@ -17,13 +17,13 @@ for root, dirs, files in os.walk(CHECKPOINTS_DIR):
                 vocab_tag = "full" if "full" in root.lower() else "trimmed"
                 data["config"] = f'{vocab_tag} | {data["activation"]} + {data["norm_type"]} + {"distill" if data["knowledge_distill"] else "no distill"}'
                 if data["knowledge_distill"]:
-                    if data["norm_type"] == "swiglu" & data["activation"] == "rmsnorm" & "full" not in root.lower():
+                    if data["norm_type"] == "swiglu" and data["activation"] == "rmsnorm" and "full" not in root.lower():
                         data["best_val_perplexity"] = 5.6843
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 1e-4'
-                    elif data["norm_type"] == "swiglu" & data["activation"] == "rmsnorm" & "full" in root.lower():
+                    elif data["norm_type"] == "swiglu" and data["activation"] == "rmsnorm" and "full" in root.lower():
                         data["best_val_perplexity"] = 5.8976
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 5e-5'
-                    elif data["norm_type"] == "gelu" & "full" in root.lower():
+                    elif data["norm_type"] == "gelu" and "full" in root.lower():
                         data["best_val_perplexity"] = 5.8651
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 5e-5'
 
