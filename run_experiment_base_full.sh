@@ -3,7 +3,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=6:00:00
+#SBATCH --time=8:00:00
 #SBATCH --job-name=nlp-final
 #SBATCH --output=logs/experiment_output_%j.out
 #SBATCH --mem=16G

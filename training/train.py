@@ -113,7 +113,7 @@ def train_model(
                     logits = output.logits
 
                     with torch.no_grad():
-                        teacher_logits = teacher_model(input_ids).logits
+                        teacher_logits = teacher_model(input_ids).logits[:, 1:, :]
                 
                     min_vocab_size = min(logits.size(-1), teacher_logits.size(-1))
                     logits = logits[..., :min_vocab_size]
