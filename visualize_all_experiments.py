@@ -27,7 +27,7 @@ for root, dirs, files in os.walk(CHECKPOINTS_DIR):
                         data["best_val_perplexity"] = math.exp(5.8976)
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 5e-5'
                         print("1e-5")
-                    elif "full" in root.lower():
+                    else:
                         data["best_val_perplexity"] = math.exp(5.8651)
                         data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill"} + lr: 5e-5'
                         print("reg")
