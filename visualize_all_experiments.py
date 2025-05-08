@@ -13,7 +13,10 @@ for root, dirs, files in os.walk(CHECKPOINTS_DIR):
         if file == "experiment_summary.json":
             with open(os.path.join(root, file)) as f:
                 data = json.load(f)
-                data["config"] = f'{data["activation"]} + {data["norm_type"]} + {"distill" if data["knowledge_distill"] else "no distill"}'
+
+                vocab_tag = "full" if "base_full" in root.lower() else "trimmed"
+                data["config"] = f'{vocab_tag} | {data["activation"]} + {data["norm_type"]} + {"distill" if data["knowledge_distill"] else "no distill"}'
+
                 results.append(data)
 
 # Sort by perplexity
