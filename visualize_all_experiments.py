@@ -38,13 +38,24 @@ plt.gca().invert_yaxis()
 plt.savefig("perplexity_by_config.png")
 plt.show()
 
-# Scatter: Param count vs Perplexity
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(10, 6))
+
+# Optional: Color by vocab
+def get_color(vocab):
+    return "red" if vocab == "trimmed" else "blue"
+
 for r in results:
+    vocab = "trimmed" if "trimmed" in r["config"] else "full"
     x = r["params"] / 1_000_000
     y = r["best_val_perplexity"]
-    plt.scatter(x, y)
-    plt.text(x + 0.02, y, r["config"], fontsize=8)
+    label = " | ".join(r["config"].split(" + ")[:2])  # shorter label, just activation + distill
+    plt.scatter(x, y, color=get_color(vocab), label=label)
+
+# Optional: remove repeated labels
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+plt.legend(by_label.values(), by_label.keys(), fontsize=8, loc='upper right', frameon=True)
+
 plt.xlabel("Model Parameters (Millions)")
 plt.ylabel("Best Validation Perplexity")
 plt.title("Param Count vs Perplexity")
@@ -52,3 +63,4 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("params_vs_perplexity.png")
 plt.show()
+
