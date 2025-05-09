@@ -116,9 +116,9 @@ def train_model(
                     with torch.no_grad():
                         teacher_logits = teacher_model(input_ids).logits[:, :-1, :]
                 
-                    #min_vocab_size = min(logits.size(-1), teacher_logits.size(-1))
-                    logits = logits[..., :30000]
-                    teacher_logits = teacher_logits[..., :30000]
+                    min_vocab_size = min(logits.size(-1), teacher_logits.size(-1))
+                    logits = logits[..., :min_vocab_size]
+                    teacher_logits = teacher_logits[..., :min_vocab_size]
 
                     temperature = 2.0
                     softmax = torch.nn.functional.softmax(teacher_logits / temperature, dim=-1)

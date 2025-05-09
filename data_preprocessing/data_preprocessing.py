@@ -41,22 +41,15 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
     return scores
 
-def tokenize(text, tokenizer, token2id, unk_id, block_size):
-    MAX_VOCAB_ID = 30000
-    UNK_ID = tokenizer.unk_token_id or 0
+def tokenize(text, tokenizer, token2id, unk_id):
+    tokens = tokenizer.tokenize(text)
 
-    # Use fast tokenizer's encode with truncation
-    ids = tokenizer.encode(
-        text,
-        max_length=block_size,
-        truncation=True,
-        add_special_tokens=False
-    )
+    if token2id is not None:
+        tokens = [t if t in token2id else "<unk>" for t in tokens]
+        return [token2id.get(t, unk_id) for t in tokens]
+    else:
+        return tokenizer.convert_tokens_to_ids(tokens)
 
-    # Clamp token IDs if needed
-    ids = [i if isinstance(i, int) and i < MAX_VOCAB_ID else UNK_ID for i in ids]
-
-    return ids
 def preprocess_data(
     dataset: str,
     batch_size: int,
@@ -69,7 +62,7 @@ def preprocess_data(
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
     if distill:
-        tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        tokenizer = AutoTokenizer.from_pretrained("./model_output/")
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
         tokenizer.pad_token = "<pad>"
@@ -91,12 +84,11 @@ def preprocess_data(
     token2id, unk_id = None, None
 
 
-    def preprocess(texts, block_size):
+    def preprocess(texts):
         input_ids = []
         for line in texts:
-            for line in texts:
-                ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id, block_size=block_size)
-  
+            ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
+            input_ids.extend(ids + [tokenizer.sep_token_id or 102])  
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
@@ -118,8 +110,8 @@ def preprocess_data(
         attention_masks = torch.ones_like(x_tensor)
         return TensorDataset(x_tensor, attention_masks)
 
-    train_dataset = preprocess(train_texts, sequence_length)
-    val_dataset = preprocess(val_texts, sequence_length)
+    train_dataset = preprocess(train_texts)
+    val_dataset = preprocess(val_texts)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
