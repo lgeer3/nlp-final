@@ -43,21 +43,12 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
 def tokenize(text, tokenizer, token2id, unk_id):
     tokens = tokenizer.tokenize(text)
-    MAX_VOCAB_ID = 30000
-    UNK_ID = tokenizer.unk_token_id or 0  # Fallback
 
     if token2id is not None:
         tokens = [t if t in token2id else "<unk>" for t in tokens]
-        ids = [token2id.get(t, unk_id) for t in tokens]
+        return [token2id.get(t, unk_id) for t in tokens]
     else:
-        ids = tokenizer.convert_tokens_to_ids(tokens)
-        # ✅ Clamp token IDs here
-        ids = [i if isinstance(i, int) and i < MAX_VOCAB_ID else UNK_ID for i in ids]
-
-    # Optional: debug print (once)
-    # print("Max token ID in sequence:", max(ids))
-
-    return ids
+        return tokenizer.convert_tokens_to_ids(tokens)
 
 def preprocess_data(
     dataset: str,
@@ -71,10 +62,7 @@ def preprocess_data(
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
     if distill:
-        tokenizer = AutoTokenizer.from_pretrained("./model_output/")
-        tokenizer.pad_token = "<pad>"
-        tokenizer.unk_token = "<unk>"
-        tokenizer.sep_token = "<sep>"
+        tokenizer = AutoTokenizer.from_pretrained("gpt2")
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
         tokenizer.pad_token = "<pad>"

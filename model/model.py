@@ -330,6 +330,8 @@ class Model(PreTrainedModel):
         
         # forward the GPT model
         token_embeddings = self.tok_emb(idx) # each index maps to a (learnable) vector
+        mask = (idx >= 30000).unsqueeze(-1).expand_as(x)
+        x = x.masked_fill(mask, 0.0)
         pos = torch.arange(0, t, dtype=torch.long, device=device) # each position maps to a (learnable) vector
         position_embeddings = self.pos_emb(pos)
 
