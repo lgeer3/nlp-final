@@ -62,7 +62,10 @@ def preprocess_data(
 ) -> Tuple[DataLoader, DataLoader, object]:
     print("loading tokenizer")
     if distill:
-        tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        tokenizer = AutoTokenizer.from_pretrained("./model_output/")
+        tokenizer.pad_token = "<pad>"
+        tokenizer.unk_token = "<unk>"
+        tokenizer.sep_token = "<sep>"
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file="./tokenizer_custom/tokenizer.json")
         tokenizer.pad_token = "<pad>"
