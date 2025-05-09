@@ -43,12 +43,18 @@ def score_vocab(vocab: dict, tokenizer, corpus: List[str]) -> dict:
 
 def tokenize(text, tokenizer, token2id, unk_id):
     tokens = tokenizer.tokenize(text)
+    MAX_VOCAB_ID = 30000  # Adjust this to match your student model
+    UNK_ID = tokenizer.unk_token_id or 0  # Fallback to 0 just in case
 
     if token2id is not None:
         tokens = [t if t in token2id else "<unk>" for t in tokens]
-        return [token2id.get(t, unk_id) for t in tokens]
+        ids = [token2id.get(t, unk_id) for t in tokens]
     else:
-        return tokenizer.convert_tokens_to_ids(tokens)
+        ids = tokenizer.convert_tokens_to_ids(tokens)
+        # Clamp any ID >= vocab size to UNK
+        ids = [i if i < MAX_VOCAB_ID else UNK_ID for i in ids]
+
+    return ids
 
 def preprocess_data(
     dataset: str,
