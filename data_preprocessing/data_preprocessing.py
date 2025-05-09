@@ -91,11 +91,12 @@ def preprocess_data(
     token2id, unk_id = None, None
 
 
-    def preprocess(texts):
+    def preprocess(texts, block_size):
         input_ids = []
         for line in texts:
-            ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id)
-            input_ids.extend(ids + [tokenizer.sep_token_id or 102])  
+            for line in texts:
+                ids = tokenize(line, tokenizer, token2id=token2id, unk_id=unk_id, block_size=block_size)
+  
 
         print(f"Total input_ids length: {len(input_ids)}", flush=True)
 
@@ -117,8 +118,8 @@ def preprocess_data(
         attention_masks = torch.ones_like(x_tensor)
         return TensorDataset(x_tensor, attention_masks)
 
-    train_dataset = preprocess(train_texts)
-    val_dataset = preprocess(val_texts)
+    train_dataset = preprocess(train_texts, sequence_length)
+    val_dataset = preprocess(val_texts, sequence_length)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
